@@ -2,6 +2,7 @@
 // import { EnvVarWarning } from "@/components/env-var-warning";
 // import { AuthButton } from "@/components/auth-button";
 import Link from "next/link";
+import { SignOutButton } from "@/components/sign-out-button";
 
 export default function ProtectedLayout({
   children,
@@ -16,6 +17,7 @@ export default function ProtectedLayout({
             <div className="flex gap-5 items-center font-semibold">
               <Link href={"/"}>Home</Link>
             </div>
+            <SignOutButton />
             {/*{!hasEnvVars ? (
               <EnvVarWarning />
             ) : (
