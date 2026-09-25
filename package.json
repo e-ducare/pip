@@ -1,0 +1,9 @@
+{
+  "name": "edcuare-funding-form",
+  "version": "1.0.0",
+  "private": true,
+  "description": "E-ducare funding request form",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

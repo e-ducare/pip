@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-ducare funding request</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <div class="brand-row">
+        <div class="brand-mark" aria-hidden="true">e</div>
+        <div>
+          <p class="eyebrow">E-ducare / project support</p>
+          <h1>Funding request</h1>
+        </div>
+      </div>
+
+      <form id="funding-form" novalidate>
+        <section class="form-section intro-section">
+          <p class="section-kicker">Tell us what is needed</p>
+          <h2>Help us understand the project.</h2>
+          <p class="section-note">
+            A clear, honest overview helps us direct support where it can have
+            the greatest effect.
+          </p>
+        </section>
+
+        <section class="form-section">
+          <label for="situation">The situation</label>
+          <textarea
+            id="situation"
+            name="situation"
+            rows="2"
+            placeholder="Explain the situation requiring funds. Few lines is enough"
+            required
+          ></textarea>
+        </section>
+
+        <section class="form-section">
+          <label for="risk">The risk</label>
+          <textarea
+            id="risk"
+            name="risk"
+            rows="2"
+            placeholder="Explain the risk if we don't do this project. Gravity of the situation, major problem faced that needs to be addressed. Few lines is enough"
+            required
+          ></textarea>
+        </section>
+
+        <section class="form-section">
+          <label for="goal">The goal</label>
+          <textarea
+            id="goal"
+            name="goal"
+            rows="2"
+            placeholder="Explain what we aim to achieve with this project. This will clarify what we are trying to change and why. Few lines is enough"
+            required
+          ></textarea>
+        </section>
+
+        <section class="form-section">
+          <label for="mission">E-ducare's mission adherence</label>
+          <textarea
+            id="mission"
+            name="mission"
+            rows="4"
+            placeholder="Explain how this project is aligned with e-ducare's mission (vulnerable children's education). Consider that educare wants to provide a holistic approach, therefore children well-being (such as, providing clean water access, health, proper meals, clothing, etc.) is part of our mission"
+            required
+          ></textarea>
+        </section>
+
+        <section class="form-section">
+          <label for="change">What are we changing</label>
+          <textarea
+            id="change"
+            name="change"
+            rows="2"
+            placeholder="Explain what impact will create this project. Few lines is enough"
+            required
+          ></textarea>
+        </section>
+
+        <section class="form-section">
+          <label for="sustainability">Sustainability / compliance</label>
+          <textarea
+            id="sustainability"
+            name="sustainability"
+            rows="4"
+            placeholder="Explain how this project will be sustainable in the medium/long term. And how do we guarantee compliance with e-ducare mission, national policies and rules. Few lines is enough."
+            required
+          ></textarea>
+        </section>
+
+        <section class="form-section table-section">
+          <div class="section-heading">
+            <div>
+              <span class="section-number">01</span>
+              <h2>People reached</h2>
+            </div>
+            <p>List the people or households this project will support.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Additional info</th>
+                  <th>N. family<br />members</th>
+                  <th>Age</th>
+                  <th class="action-column">Delete row</th>
+                </tr>
+              </thead>
+              <tbody id="people-rows"></tbody>
+            </table>
+          </div>
+          <button class="add-row" type="button" data-table="people">
+            ＋ Add person
+          </button>
+        </section>
+
+        <section class="form-section table-section">
+          <div class="section-heading">
+            <div>
+              <span class="section-number">02</span>
+              <h2>Summary of projected costs</h2>
+            </div>
+            <p>Show how the requested funds would be used.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Description of items required</th>
+                  <th>Amount<br />local currency</th>
+                  <th>NRC / RC</th>
+                  <th class="action-column">Delete row</th>
+                </tr>
+              </thead>
+              <tbody id="cost-rows"></tbody>
+            </table>
+          </div>
+          <button class="add-row" type="button" data-table="costs">
+            ＋ Add cost item
+          </button>
+        </section>
+
+        <section class="form-section">
+          <label for="additionalInfo">Additional information</label>
+          <textarea
+            id="additionalInfo"
+            name="additionalInfo"
+            rows="2"
+            placeholder="If any."
+          ></textarea>
+        </section>
+
+        <div class="form-footer">
+          <p class="required-note"><span>*</span> Required fields</p>
+          <button class="submit-button" type="submit">
+            <span>Submit request</span><span aria-hidden="true">→</span>
+          </button>
+        </div>
+        <p id="error-message" class="error-message" role="alert"></p>
+      </form>
+
+      <section id="confirmation" class="confirmation" hidden>
+        <div class="confirmation-icon" aria-hidden="true">✓</div>
+        <p class="section-kicker">Request received</p>
+        <h2>Your form was submitted.</h2>
+        <p>
+          Thank you for sharing the details of your project. Your request has
+          been recorded and is ready for review.
+        </p>
+        <button id="new-request" class="secondary-button" type="button">
+          Submit another request <span aria-hidden="true">↗</span>
+        </button>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
