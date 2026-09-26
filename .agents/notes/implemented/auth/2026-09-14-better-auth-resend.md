@@ -32,3 +32,7 @@ Better Auth disables origin validation by default in test mode. The redirect reg
 `README.md` documents the five server-only environment settings, Resend domain setup, migration deployment, and test database requirements. Private env files were left untouched because editor settings block access.
 
 Apply the reviewed migration, configure credentials, run Supabase advisors, and verify delivery to a real mailbox before release. Rate limiting is Better Auth's process-local default; multi-instance public deployments need shared storage or upstream enforcement. Email delivery failures require a new link request; there is no persistent retry queue.
+
+## Open items
+
+Application roles are undecided. The next auth change is an admin role that can invite users.
