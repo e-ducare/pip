@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
 
-import { createClient } from "@/utils/supabase/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { InfoIcon } from "lucide-react";
 import { Suspense } from "react";
 
 async function UserDetails() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
+  const session = await auth.api.getSession({ headers: await headers() });
 
-  if (error || !data?.claims) {
+  if (!session) {
     redirect("/auth/login");
   }
 
-  return JSON.stringify(data.claims, null, 2);
+  return JSON.stringify(session.user, null, 2);
 }
 
 export default function ProtectedPage() {
