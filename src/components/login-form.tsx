@@ -66,11 +66,18 @@ export function LoginForm({
         email,
         password,
       });
-      if (error) throw new Error(error.message || "Unable to log in");
+      if (error) {
+        setError(
+          error.code === "EMAIL_NOT_VERIFIED"
+            ? "Verify your email before logging in. Request a new link below if you need one."
+            : error.message || "Unable to log in",
+        );
+        return;
+      }
       router.push("/protected");
       router.refresh();
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+    } catch {
+      setError("Unable to log in. Please try again.");
     } finally {
       setIsLoading(false);
     }

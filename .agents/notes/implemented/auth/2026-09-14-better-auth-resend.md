@@ -19,6 +19,7 @@ The application has no existing users to import. Application roles, permissions,
 - An ORM adds schema tooling without an application schema that needs it. Direct `pg` matches Better Auth's supported Postgres adapter.
 - Import scripts, Supabase metadata fields, and bcrypt compatibility serve existing accounts; this application has none.
 - Awaiting Resend in request handlers exposes delivery latency. Untracked background promises risk termination after the response. A durable mail queue adds infrastructure not required for this initial implementation.
+- Better Auth's `sendOnSignIn` sends a new verification link on every denied login. It builds that link from the login request's callback, and the resend button already covers the need.
 - The demo's admin, organization, MFA, and billing plugins introduce requirements that are not settled.
 
 ## Verification

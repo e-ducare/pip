@@ -148,7 +148,8 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     expect(denied.status).toBe(403);
     expect(await denied.json()).toMatchObject({ code: "EMAIL_NOT_VERIFIED" });
     await flush();
-    expect(delivery.send).toHaveBeenCalledWith(expect.objectContaining({
+    // Only sign-up sends a link; the denied sign-in does not send another.
+    expect(delivery.send).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
       to: email, from: "PIP Test <auth@example.test>",
     }));
     expect((await request(emailLink("Verify your PIP email address").href)).status).toBeLessThan(400);
