@@ -6,15 +6,17 @@ import { sendAuthEmail } from "./auth-email";
 import { requiredEnv } from "./auth-env";
 
 const globalForAuth = globalThis as typeof globalThis & { authPool?: Pool };
-const pool = globalForAuth.authPool ?? new Pool({
-  connectionString: requiredEnv("DATABASE_URL"),
-  max: 1,
-  idleTimeoutMillis: 30_000,
-  connectionTimeoutMillis: 10_000,
-}).on("error", (error) => {
-  // pg reports dropped idle connections here; an unhandled "error" event crashes Node.
-  console.error("Auth database pool error", error.message);
-});
+const pool =
+  globalForAuth.authPool ??
+  new Pool({
+    connectionString: requiredEnv("DATABASE_URL"),
+    max: 1,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 10_000,
+  }).on("error", (error) => {
+    // pg reports dropped idle connections here; an unhandled "error" event crashes Node.
+    console.error("Auth database pool error", error.message);
+  });
 
 if (process.env.NODE_ENV !== "production") globalForAuth.authPool = pool;
 

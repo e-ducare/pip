@@ -27,7 +27,11 @@ export function SignOutButton() {
 
   return (
     <div className="flex items-center gap-2">
-      {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-red-500">
+          {error}
+        </p>
+      )}
       <Button type="button" variant="outline" onClick={handleSignOut} disabled={isLoading}>
         {isLoading ? "Signing out..." : "Sign out"}
       </Button>

@@ -3,23 +3,14 @@
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function SignUpForm({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,9 +57,7 @@ export function SignUpForm({
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>
-            Create an account. Verify your email before logging in.
-          </CardDescription>
+          <CardDescription>Create an account. Verify your email before logging in.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
@@ -125,7 +114,11 @@ export function SignUpForm({
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
-              {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
+              {error && (
+                <p role="alert" className="text-sm text-red-500">
+                  {error}
+                </p>
+              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
