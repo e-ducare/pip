@@ -43,7 +43,7 @@ export function ResetPasswordForm({
         newPassword: password,
         token,
       });
-      if (error) throw new Error(error.message || "Unable to reset your password");
+      if (error) throw error;
       setPassword("");
       setRepeatPassword("");
       setIsSuccess(true);

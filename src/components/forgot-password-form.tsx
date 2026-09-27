@@ -34,9 +34,7 @@ export function ForgotPasswordForm({
         email,
         redirectTo: "/auth/reset-password",
       });
-      if (error) {
-        throw new Error(error.message || "Unable to request a password reset");
-      }
+      if (error) throw error;
       setIsSuccess(true);
     } catch {
       setError("Unable to request a reset link. Please try again.");

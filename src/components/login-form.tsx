@@ -42,9 +42,7 @@ export function LoginForm({
         email,
         callbackURL: "/auth/login",
       });
-      if (error) {
-        throw new Error(error.message || "Unable to send verification email");
-      }
+      if (error) throw error;
       setVerificationStatus(
         "If this email needs verification, a link has been sent. Check your inbox.",
       );
@@ -156,7 +154,6 @@ export function LoginForm({
             </div>
           </form>
           <form onSubmit={handleResend} className="mt-4 flex flex-col gap-2">
-
             {verificationStatus && (
               <p role="status" className="text-sm text-muted-foreground">
                 {verificationStatus}
