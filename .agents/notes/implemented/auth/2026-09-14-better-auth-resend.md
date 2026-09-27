@@ -11,6 +11,7 @@ The application has no existing users to import. Application roles, permissions,
 - `src/lib/auth.ts` requires verified email before login and revokes all sessions on password reset. Password hashing uses Better Auth's default scrypt.
 - Verification links sign the user in and return to `/auth/login`, which forwards signed-in users to `/protected` and shows link errors otherwise. Sign-up and the resend button send verification links; a denied login does not, so every link carries the same callback.
 - `src/lib/auth-email.ts` reads the Resend settings at module load, because Better Auth swallows errors thrown by email callbacks. It schedules delivery with Next.js `after()`. This keeps provider latency out of account-existence responses and keeps delivery alive in supported serverless runtimes. Logs exclude message bodies, recipients, and tokens.
+- `src/proxy.ts` validates the database session on every route except auth pages, the auth API, and static assets. It costs one query per request and renews the session cookie, which Server Components cannot set. Pages still validate the session before reading data.
 - `/api/auth/[...all]` runs in Node.js. Browser forms use the same-origin Better Auth client; protected data requires server-side database session validation.
 - The Supabase migration creates only the four core Better Auth tables. RLS and revoked Data API grants protect credential and session data from REST/GraphQL clients.
 - The `pg` pool has one connection per warm instance and is reused across development reloads.
@@ -21,6 +22,7 @@ The application has no existing users to import. Application roles, permissions,
 - Import scripts, Supabase metadata fields, and bcrypt compatibility serve existing accounts; this application has none.
 - Awaiting Resend in request handlers exposes delivery latency. Untracked background promises risk termination after the response. A durable mail queue adds infrastructure not required for this initial implementation.
 - Better Auth's `sendOnSignIn` sends a new verification link on every denied login. It builds that link from the login request's callback, and the resend button already covers the need.
+- A proxy that checks only for the cookie avoids that query but cannot renew the cookie, so active users lose their session seven days after login.
 - The demo's admin, organization, MFA, and billing plugins introduce requirements that are not settled.
 
 ## Verification

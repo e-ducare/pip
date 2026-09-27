@@ -67,7 +67,7 @@ Open http://localhost:3000 and sign up. The email verification link signs you in
 
 `src/lib/auth.ts` configures Better Auth. `src/lib/auth-email.ts` sends plain-text verification and reset links through Resend using Next.js `after()`. Delivery runs after the response, so a success message confirms the request, not delivery. Monitor server logs and Resend delivery logs for failures; users can request another link. There is no persistent email retry queue.
 
-Password resets revoke all sessions. Protected pages validate the database session; the proxy's cookie-presence check only provides an early redirect. Every future protected page, route handler, and server action must validate the session before accessing data.
+Password resets revoke all sessions. `src/proxy.ts` validates the database session on every route except `/auth/*`, `/api/auth/*`, and static assets. It redirects requests without a session to login and renews the session cookie, which Server Components cannot set. Pages, route handlers, and server actions still validate the session before accessing data.
 
 Better Auth's default production rate limiter uses process-local memory. Before a multi-instance public deployment, configure shared rate-limit storage or an upstream limiter and verify the proxy's trusted IP headers. A Node.js deployment supporting `after()` is required; static export is not supported.
 
