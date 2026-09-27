@@ -74,10 +74,14 @@ Better Auth's default production rate limiter uses process-local memory. Before 
 ## Validation
 
 ```sh
-pnpm typecheck
+pnpm lint
 pnpm test
 pnpm build
 ```
+
+`pnpm lint` runs oxlint with type-aware rules and type-checks through typescript-go. `pnpm format` runs oxfmt, which also formats Markdown.
+
+`pnpm install` installs a pre-commit hook. It formats staged files with oxfmt, re-stages them, and runs `pnpm lint` when code or config is staged.
 
 The build requires auth environment settings and a reachable migrated database for Better Auth's schema validation. Tests mock Resend and never deliver email.
 

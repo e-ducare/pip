@@ -3,16 +3,19 @@ import { Pool } from "pg";
 import { getMigrations } from "better-auth/db/migration";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+type Message = { from: string; to: string; subject: string; text: string };
 const delivery = vi.hoisted(() => ({
   queue: [] as Array<() => Promise<void>>,
-  send: vi.fn(),
+  send: vi.fn<(message: Message) => Promise<unknown>>(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("next/server", () => ({
   after: (task: () => Promise<void>) => delivery.queue.push(task),
 }));
 vi.mock("resend", () => ({
-  Resend: class { emails = { send: delivery.send }; },
+  Resend: class {
+    emails = { send: delivery.send };
+  },
 }));
 
 // Never fall back to DATABASE_URL or load a private env file.
@@ -31,7 +34,9 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     if (
       !["postgres:", "postgresql:"].includes(url.protocol) ||
       !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) ||
-      url.pathname !== "/pip_auth_test" || url.search || url.hash
+      url.pathname !== "/pip_auth_test" ||
+      url.search ||
+      url.hash
     ) {
       throw new Error("TEST_DATABASE_URL must target local pip_auth_test without query parameters");
     }
@@ -45,14 +50,18 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     vi.stubEnv("NODE_ENV", "test");
     db = new Pool({ connectionString: databaseURL, max: 2 });
     const result = await db.query("SELECT current_database() AS name");
-    expect(result.rows[0].name).toBe("pip_auth_test");
+    if (result.rows[0].name !== "pip_auth_test") {
+      throw new Error("Refusing to run against a database other than pip_auth_test");
+    }
     ({ auth } = await import("@/lib/auth"));
     authPool = global.authPool;
   });
 
   async function clean() {
     // No CASCADE: cleanup must not reach tables outside this explicit list.
-    await db!.query('TRUNCATE TABLE public."session", public."account", public."verification", public."user"');
+    await db!.query(
+      'TRUNCATE TABLE public."session", public."account", public."verification", public."user"',
+    );
   }
 
   beforeEach(async () => {
@@ -73,15 +82,17 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
   });
 
   function request(path: string, body?: Record<string, unknown>, cookie?: string) {
-    return auth.handler(new Request(new URL(path, `${baseURL}/api/auth/`), {
-      method: body ? "POST" : "GET",
-      headers: {
-        origin: baseURL,
-        ...(body ? { "content-type": "application/json" } : {}),
-        ...(cookie ? { cookie } : {}),
-      },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-    }));
+    return auth.handler(
+      new Request(new URL(path, `${baseURL}/api/auth/`), {
+        method: body ? "POST" : "GET",
+        headers: {
+          origin: baseURL,
+          ...(body ? { "content-type": "application/json" } : {}),
+          ...(cookie ? { cookie } : {}),
+        },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      }),
+    );
   }
 
   async function flush() {
@@ -92,9 +103,9 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     const messages = delivery.send.mock.calls.map(([message]) => message);
     const message = messages.filter((message) => message.subject === subject).at(-1);
     expect(message).toBeDefined();
-    const link = message.text.match(/https?:\/\/\S+/)?.[0];
+    const link = message!.text.match(/https?:\/\/\S+/)?.[0];
     expect(link).toBeTruthy();
-    const url = new URL(link);
+    const url = new URL(link!);
     expect(url.origin).toBe(baseURL);
     return url;
   }
@@ -128,7 +139,8 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
 
   async function resetToken(email: string) {
     const response = await request("request-password-reset", {
-      email, redirectTo: `${baseURL}/auth/reset-password`,
+      email,
+      redirectTo: `${baseURL}/auth/reset-password`,
     });
     expect(response.status).toBe(200);
     await flush();
@@ -149,9 +161,12 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     expect(await denied.json()).toMatchObject({ code: "EMAIL_NOT_VERIFIED" });
     await flush();
     // Only sign-up sends a link; the denied sign-in does not send another.
-    expect(delivery.send).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-      to: email, from: "PIP Test <auth@example.test>",
-    }));
+    expect(delivery.send).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        to: email,
+        from: "PIP Test <auth@example.test>",
+      }),
+    );
     const verified = await request(emailLink("Verify your PIP email address").href);
     expect(verified.status).toBeLessThan(400);
     const verifiedSession = await request("get-session", undefined, sessionCookie(verified));
@@ -193,7 +208,9 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     }
     expect((await request("sign-in/email", { email, password })).status).toBe(401);
     const cookie = await signIn(email, newPassword);
-    expect(await (await request("get-session", undefined, cookie)).json()).toMatchObject({ user: { email } });
+    expect(await (await request("get-session", undefined, cookie)).json()).toMatchObject({
+      user: { email },
+    });
   });
 
   it("rejects invalid and expired reset tokens without changing the password", async () => {
@@ -226,14 +243,16 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
       },
     });
     function secureRequest(path: string, body?: Record<string, unknown>) {
-      return securedAuth.handler(new Request(new URL(path, `${baseURL}/api/auth/`), {
-        method: body ? "POST" : "GET",
-        headers: {
-          origin: baseURL,
-          ...(body ? { "content-type": "application/json" } : {}),
-        },
-        ...(body ? { body: JSON.stringify(body) } : {}),
-      }));
+      return securedAuth.handler(
+        new Request(new URL(path, `${baseURL}/api/auth/`), {
+          method: body ? "POST" : "GET",
+          headers: {
+            origin: baseURL,
+            ...(body ? { "content-type": "application/json" } : {}),
+          },
+          ...(body ? { body: JSON.stringify(body) } : {}),
+        }),
+      );
     }
 
     const email = await signup();
@@ -241,7 +260,8 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     const link = emailLink("Verify your PIP email address");
     delivery.send.mockClear();
     const reset = await secureRequest("request-password-reset", {
-      email, redirectTo: "https://untrusted.example/reset",
+      email,
+      redirectTo: "https://untrusted.example/reset",
     });
     expect(reset.status).toBe(403);
     expect(reset.headers.get("location")).toBeNull();
@@ -249,7 +269,8 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     expect(delivery.send).not.toHaveBeenCalled();
 
     const allowed = await secureRequest("request-password-reset", {
-      email, redirectTo: `${baseURL}/auth/reset-password`,
+      email,
+      redirectTo: `${baseURL}/auth/reset-password`,
     });
     expect(allowed.status).toBe(200);
     await flush();
@@ -293,7 +314,9 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     expect(result.rows).toHaveLength(12);
     for (const row of result.rows) {
       expect(row, `${row.rolname} on ${row.relname}`).toMatchObject({
-        relrowsecurity: true, table_access: false, column_access: false,
+        relrowsecurity: true,
+        table_access: false,
+        column_access: false,
       });
     }
   });

@@ -1,15 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -67,8 +61,12 @@ export function ResetPasswordForm({
         <CardContent>
           {isSuccess ? (
             <div className="flex flex-col gap-6">
-              <p role="status" className="text-sm text-muted-foreground">Your password has been reset.</p>
-              <Link href="/auth/login" className="text-sm underline underline-offset-4">Log in with your new password</Link>
+              <p role="status" className="text-sm text-muted-foreground">
+                Your password has been reset.
+              </p>
+              <Link href="/auth/login" className="text-sm underline underline-offset-4">
+                Log in with your new password
+              </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -99,13 +97,19 @@ export function ResetPasswordForm({
                     onChange={(e) => setRepeatPassword(e.target.value)}
                   />
                 </div>
-                {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
+                {error && (
+                  <p role="alert" className="text-sm text-red-500">
+                    {error}
+                  </p>
+                )}
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Resetting password..." : "Reset password"}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">
-                <Link href="/auth/forgot-password" className="underline underline-offset-4">Request a new reset link</Link>
+                <Link href="/auth/forgot-password" className="underline underline-offset-4">
+                  Request a new reset link
+                </Link>
               </div>
             </form>
           )}
