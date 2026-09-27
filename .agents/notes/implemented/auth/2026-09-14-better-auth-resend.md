@@ -27,13 +27,13 @@ The application has no existing users to import. Application roles, permissions,
 
 ## Verification
 
-Nineteen tests pass, including real local PostgreSQL handler tests with mocked Resend, schema compatibility, and Data API privilege checks. The production build and TypeScript checks pass with isolated test configuration. No real email was sent and no remote database was changed.
+Unit and integration tests cover real local PostgreSQL handler flows with mocked Resend, schema compatibility, and Data API privilege checks. The production build and TypeScript checks pass with isolated test configuration. No real email was sent and no remote database was changed.
 
 Better Auth disables origin validation by default in test mode. The redirect regression test explicitly enables origin and CSRF checks on an instance using the runtime configuration.
 
 ## Deployment requirements
 
-`README.md` documents the five server-only environment settings, Resend domain setup, migration deployment, and test database requirements. Private env files were left untouched because editor settings block access.
+`README.md` documents the five server-only environment settings, Resend domain setup, migration deployment, and test database requirements.
 
 Apply the reviewed migration, configure credentials, run Supabase advisors, and verify delivery to a real mailbox before release. Rate limiting is Better Auth's process-local default; multi-instance public deployments need shared storage or upstream enforcement. Email delivery failures require a new link request; there is no persistent retry queue.
 
