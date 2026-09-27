@@ -1,18 +1,21 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 
+type Message = { from: string; to: string; subject: string; text: string };
 const mocks = vi.hoisted(() => ({
   queue: [] as Array<() => Promise<void>>,
-  send: vi.fn(),
-  constructor: vi.fn(),
+  send: vi.fn<(message: Message) => Promise<unknown>>(),
+  constructor: vi.fn<(key: string) => void>(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("next/server", () => ({
-  after: vi.fn((task: () => Promise<void>) => mocks.queue.push(task)),
+  after: (task: () => Promise<void>) => mocks.queue.push(task),
 }));
 vi.mock("resend", () => ({
   Resend: class {
     emails = { send: mocks.send };
-    constructor(key: string) { mocks.constructor(key); }
+    constructor(key: string) {
+      mocks.constructor(key);
+    }
   },
 }));
 
@@ -48,24 +51,28 @@ describe("sendAuthEmail", () => {
     expect(mocks.send).not.toHaveBeenCalled();
     await mocks.queue[0]();
     expect(mocks.send).toHaveBeenCalledExactlyOnceWith({
-      from: "PIP Test <auth@example.test>", ...email,
+      from: "PIP Test <auth@example.test>",
+      ...email,
     });
   });
 
   it("logs only name and statusCode for a returned provider error", async () => {
     const sendAuthEmail = await loadSendAuthEmail();
-    const log = vi.spyOn(console, "error").mockImplementation(() => { });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
     mocks.send.mockResolvedValue({
       error: {
-        name: "validation_error", statusCode: 422,
-        message: `${email.to} ${email.text}`, body: email,
-      }
+        name: "validation_error",
+        statusCode: 422,
+        message: `${email.to} ${email.text}`,
+        body: email,
+      },
     });
     sendAuthEmail(email);
     expect(log).not.toHaveBeenCalled();
     await expect(mocks.queue[0]()).resolves.toBeUndefined();
     expect(log).toHaveBeenCalledExactlyOnceWith("Auth email delivery failed", {
-      name: "validation_error", statusCode: 422,
+      name: "validation_error",
+      statusCode: 422,
     });
     expect(JSON.stringify(log.mock.calls)).not.toContain("private-token");
     expect(JSON.stringify(log.mock.calls)).not.toContain(email.to);
@@ -73,7 +80,7 @@ describe("sendAuthEmail", () => {
 
   it("catches rejected delivery without logging the error contents", async () => {
     const sendAuthEmail = await loadSendAuthEmail();
-    const log = vi.spyOn(console, "error").mockImplementation(() => { });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
     mocks.send.mockRejectedValue(new Error(`${email.to} ${email.text}`));
     sendAuthEmail(email);
     await expect(mocks.queue[0]()).resolves.toBeUndefined();
@@ -84,6 +91,8 @@ describe("sendAuthEmail", () => {
 
   it.each(["RESEND_API_KEY", "RESEND_FROM_EMAIL"])("requires %s at module load", async (name) => {
     vi.stubEnv(name, undefined);
-    await expect(loadSendAuthEmail()).rejects.toThrow(`Missing required environment variable: ${name}`);
+    await expect(loadSendAuthEmail()).rejects.toThrow(
+      `Missing required environment variable: ${name}`,
+    );
   });
 });

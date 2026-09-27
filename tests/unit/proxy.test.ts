@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 
-const getSession = vi.hoisted(() => vi.fn());
+type GetSession = (context: { headers: Headers; returnHeaders: true }) => Promise<{
+  headers: Headers;
+  response: object | null;
+}>;
+const getSession = vi.hoisted(() => vi.fn<GetSession>());
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession } } }));
 
 import { config, proxy } from "@/proxy";
@@ -14,9 +18,11 @@ beforeEach(() => getSession.mockReset());
 describe("session proxy", () => {
   it("redirects requests without a valid session to login", async () => {
     getSession.mockResolvedValue({ headers: new Headers(), response: null });
-    const response = await proxy(new NextRequest("https://app.example.test/protected/settings", {
-      headers: { cookie: "better-auth.session_token=not-a-valid-session" },
-    }));
+    const response = await proxy(
+      new NextRequest("https://app.example.test/protected/settings", {
+        headers: { cookie: "better-auth.session_token=not-a-valid-session" },
+      }),
+    );
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("https://app.example.test/auth/login");
   });

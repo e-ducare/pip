@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": { "browser": true, "node": true },
+  "plugins": ["typescript", "react", "react-perf", "nextjs", "vitest"],
+  "rules": {
+    "no-console": ["warn", { "allow": ["error"] }],
+    "typescript/no-explicit-any": "error",
+  },
+}
