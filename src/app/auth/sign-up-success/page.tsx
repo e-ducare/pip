@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -14,15 +15,19 @@ export default function Page() {
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">
-                Thank you for signing up!
+                Check your email
               </CardTitle>
-              <CardDescription>Check your email to confirm</CardDescription>
+              <CardDescription>Email verification is required to log in</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                You&apos;ve successfully signed up. Please check your email to
-                confirm your account before signing in.
+                If your email is eligible for registration, you&apos;ll receive a
+                verification link. Check your inbox and spam folder. If you already
+                have an account, log in or reset your password.
               </p>
+              <Link href="/auth/login" className="mt-4 inline-block text-sm underline underline-offset-4">
+                Back to login
+              </Link>
             </CardContent>
           </Card>
         </div>

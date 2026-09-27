@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { createClient } from "@/utils/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,6 +20,7 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -29,7 +30,6 @@ export function SignUpForm({
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
 
@@ -39,15 +39,20 @@ export function SignUpForm({
       return;
     }
 
+    if (!name.trim() || password.length < 8 || password.length > 128) {
+      setError("Enter your name and a password between 8 and 128 characters.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error } = await authClient.signUp.email({
+        name: name.trim(),
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
-        },
+        callbackURL: "/auth/login",
       });
-      if (error) throw error;
+      if (error) throw new Error(error.message || "Unable to sign up");
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
@@ -61,16 +66,29 @@ export function SignUpForm({
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <CardDescription>
+            Create an account. Verify your email before logging in.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  autoComplete="name"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="m@example.com"
                   required
                   value={email}
@@ -84,6 +102,9 @@ export function SignUpForm({
                 <Input
                   id="password"
                   type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  maxLength={128}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -96,12 +117,15 @@ export function SignUpForm({
                 <Input
                   id="repeat-password"
                   type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  maxLength={128}
                   required
                   value={repeatPassword}
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
