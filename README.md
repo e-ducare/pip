@@ -26,7 +26,7 @@ Generate the auth secret with `openssl rand -base64 32`. Never prefix these vari
 
 For serverless hosting, choose Supabase's transaction pooler. For local development on IPv4, the session pooler also works. Copy the complete host and username from Connect rather than constructing them. Percent-encode reserved characters in the password.
 
-Use TLS for remote connections. Configure `sslmode=verify-full` and the Supabase root certificate via `sslrootcert` when required by your connection. Do not disable certificate validation. See [Supabase connection settings](https://supabase.com/docs/guides/database/connecting-to-postgres).
+Use TLS with `sslmode=verify-full`. Supabase signs its certificates with its own root CA, so download that certificate from the dashboard's SSL configuration and set `sslrootcert` to its path, as in `.env.example`. Do not disable certificate validation. See [Supabase connection settings](https://supabase.com/docs/guides/database/connecting-to-postgres).
 
 The application uses one `pg` connection per warm instance. Auth tables have RLS enabled without browser-facing policies. The server connection must be able to manage those tables, such as the table-owning migration role; a role subject to RLS needs explicit server-only policies. Keep database credentials server-side and restrict their privileges to the auth tables when provisioning a dedicated runtime login.
 
