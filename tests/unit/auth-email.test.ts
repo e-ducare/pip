@@ -16,8 +16,6 @@ vi.mock("resend", () => ({
   },
 }));
 
-import { sendAuthEmail } from "@/lib/auth-email";
-
 const email = {
   to: "recipient@example.test",
   subject: "Verify your email",
@@ -25,6 +23,7 @@ const email = {
 };
 
 beforeEach(() => {
+  vi.resetModules();
   vi.clearAllMocks();
   mocks.queue.length = 0;
   mocks.send.mockResolvedValue({ data: { id: "test-email" }, error: null });
@@ -36,8 +35,13 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
+async function loadSendAuthEmail() {
+  return (await import("@/lib/auth-email")).sendAuthEmail;
+}
+
 describe("sendAuthEmail", () => {
   it("defers delivery until after runs and uses the configured sender and API key", async () => {
+    const sendAuthEmail = await loadSendAuthEmail();
     sendAuthEmail(email);
     expect(mocks.constructor).toHaveBeenCalledWith("re_test_key");
     expect(mocks.queue).toHaveLength(1);
@@ -49,6 +53,7 @@ describe("sendAuthEmail", () => {
   });
 
   it("logs only name and statusCode for a returned provider error", async () => {
+    const sendAuthEmail = await loadSendAuthEmail();
     const log = vi.spyOn(console, "error").mockImplementation(() => { });
     mocks.send.mockResolvedValue({
       error: {
@@ -67,6 +72,7 @@ describe("sendAuthEmail", () => {
   });
 
   it("catches rejected delivery without logging the error contents", async () => {
+    const sendAuthEmail = await loadSendAuthEmail();
     const log = vi.spyOn(console, "error").mockImplementation(() => { });
     mocks.send.mockRejectedValue(new Error(`${email.to} ${email.text}`));
     sendAuthEmail(email);
@@ -76,10 +82,8 @@ describe("sendAuthEmail", () => {
     );
   });
 
-  it.each(["RESEND_API_KEY", "RESEND_FROM_EMAIL"])("requires %s before scheduling", (name) => {
+  it.each(["RESEND_API_KEY", "RESEND_FROM_EMAIL"])("requires %s at module load", async (name) => {
     vi.stubEnv(name, undefined);
-    expect(() => sendAuthEmail(email)).toThrow(`Missing required environment variable: ${name}`);
-    expect(mocks.queue).toHaveLength(0);
-    expect(mocks.send).not.toHaveBeenCalled();
+    await expect(loadSendAuthEmail()).rejects.toThrow(`Missing required environment variable: ${name}`);
   });
 });

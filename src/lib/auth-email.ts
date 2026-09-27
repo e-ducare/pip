@@ -10,10 +10,11 @@ type AuthEmail = {
   text: string;
 };
 
-export function sendAuthEmail(email: AuthEmail) {
-  const resend = new Resend(requiredEnv("RESEND_API_KEY"));
-  const from = requiredEnv("RESEND_FROM_EMAIL");
+// Read at startup: Better Auth swallows errors thrown by email callbacks.
+const resend = new Resend(requiredEnv("RESEND_API_KEY"));
+const from = requiredEnv("RESEND_FROM_EMAIL");
 
+export function sendAuthEmail(email: AuthEmail) {
   // Keep delivery latency out of account lookup responses. Next.js waits for this task.
   after(async () => {
     try {
