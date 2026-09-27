@@ -63,7 +63,7 @@ Better Auth sessions do not populate Supabase's `auth.uid()`. Future application
 pnpm dev
 ```
 
-Open http://localhost:3000. Sign up, verify the email link, and log in to `/protected`. `/auth/login` also offers verification resend and password recovery; logging in with an unverified email does not send a new link.
+Open http://localhost:3000 and sign up. The email verification link signs you in and opens `/protected`. `/auth/login` also offers verification resend and password recovery; logging in with an unverified email does not send a new link.
 
 `src/lib/auth.ts` configures Better Auth. `src/lib/auth-email.ts` sends plain-text verification and reset links through Resend using Next.js `after()`. Delivery runs after the response, so a success message confirms the request, not delivery. Monitor server logs and Resend delivery logs for failures; users can request another link. There is no persistent email retry queue.
 

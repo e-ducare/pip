@@ -9,6 +9,7 @@ The application has no existing users to import. Application roles, permissions,
 ## Chosen approach
 
 - `src/lib/auth.ts` requires verified email before login and revokes all sessions on password reset. Password hashing uses Better Auth's default scrypt.
+- Verification links sign the user in and return to `/auth/login`, which forwards signed-in users to `/protected` and shows link errors otherwise. Sign-up and the resend button send verification links; a denied login does not, so every link carries the same callback.
 - `src/lib/auth-email.ts` reads the Resend settings at module load, because Better Auth swallows errors thrown by email callbacks. It schedules delivery with Next.js `after()`. This keeps provider latency out of account-existence responses and keeps delivery alive in supported serverless runtimes. Logs exclude message bodies, recipients, and tokens.
 - `/api/auth/[...all]` runs in Node.js. Browser forms use the same-origin Better Auth client; protected data requires server-side database session validation.
 - The Supabase migration creates only the four core Better Auth tables. RLS and revoked Data API grants protect credential and session data from REST/GraphQL clients.

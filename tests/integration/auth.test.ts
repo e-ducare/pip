@@ -152,7 +152,10 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     expect(delivery.send).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
       to: email, from: "PIP Test <auth@example.test>",
     }));
-    expect((await request(emailLink("Verify your PIP email address").href)).status).toBeLessThan(400);
+    const verified = await request(emailLink("Verify your PIP email address").href);
+    expect(verified.status).toBeLessThan(400);
+    const verifiedSession = await request("get-session", undefined, sessionCookie(verified));
+    expect(await verifiedSession.json()).toMatchObject({ user: { email, emailVerified: true } });
     const cookie = await signIn(email);
     const session = await request("get-session", undefined, cookie);
     expect(await session.json()).toMatchObject({ user: { email, emailVerified: true } });
