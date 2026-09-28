@@ -18,7 +18,7 @@ vi.mock("resend", () => ({
   },
 }));
 
-// Never fall back to DATABASE_URL or load a private env file.
+// Never fall back to another database or load a private env file.
 const databaseURL = process.env.TEST_DATABASE_URL;
 const baseURL = "http://localhost:3100";
 const password = "Original-test-password-123!";
@@ -27,7 +27,6 @@ const newPassword = "Replacement-test-password-456!";
 describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
   let auth: typeof import("@/lib/auth").auth;
   let db: Pool | undefined;
-  let authPool: Pool | undefined;
 
   beforeAll(async () => {
     const url = new URL(databaseURL!);
@@ -40,9 +39,6 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     ) {
       throw new Error("TEST_DATABASE_URL must target local pip_auth_test without query parameters");
     }
-    const global = globalThis as typeof globalThis & { authPool?: Pool };
-    if (global.authPool) throw new Error("Refusing to reuse an existing auth database pool");
-    vi.stubEnv("DATABASE_URL", databaseURL!);
     vi.stubEnv("BETTER_AUTH_URL", baseURL);
     vi.stubEnv("BETTER_AUTH_SECRET", "pip-integration-only-secret-at-least-32-characters");
     vi.stubEnv("RESEND_API_KEY", "re_test_never_sent");
@@ -53,8 +49,8 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     if (result.rows[0].name !== "pip_auth_test") {
       throw new Error("Refusing to run against a database other than pip_auth_test");
     }
+    // The cloudflare:workers test stub points auth at TEST_DATABASE_URL.
     ({ auth } = await import("@/lib/auth"));
-    authPool = global.authPool;
   });
 
   async function clean() {
@@ -72,11 +68,9 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
 
   afterAll(async () => {
     try {
-      if (authPool) await clean();
+      if (auth) await clean();
     } finally {
-      await Promise.all([db?.end(), authPool?.end()]);
-      const global = globalThis as typeof globalThis & { authPool?: Pool };
-      if (authPool && global.authPool === authPool) delete global.authPool;
+      await db?.end();
       vi.unstubAllEnvs();
     }
   });

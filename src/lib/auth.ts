@@ -1,30 +1,36 @@
 import "server-only";
 
+import { env } from "cloudflare:workers";
 import { betterAuth } from "better-auth";
-import { Pool } from "pg";
+import { Client } from "pg";
 import { sendAuthEmail } from "./auth-email";
 import { requiredEnv } from "./auth-env";
 
-const globalForAuth = globalThis as typeof globalThis & { authPool?: Pool };
-const pool =
-  globalForAuth.authPool ??
-  new Pool({
-    connectionString: requiredEnv("DATABASE_URL"),
-    max: 1,
-    idleTimeoutMillis: 30_000,
-    connectionTimeoutMillis: 10_000,
-  }).on("error", (error) => {
-    // pg reports dropped idle connections here; an unhandled "error" event crashes Node.
-    console.error("Auth database pool error", error.message);
-  });
-
-if (process.env.NODE_ENV !== "production") globalForAuth.authPool = pool;
+// Workers cannot reuse a socket across requests, so each checkout opens a
+// client and closes it on release. Hyperdrive pools the database connections.
+const database = {
+  async connect() {
+    const client = new Client({
+      connectionString: env.HYPERDRIVE.connectionString,
+      connectionTimeoutMillis: 10_000,
+    });
+    await client.connect();
+    return Object.assign(client, {
+      release: () => void client.end().catch(() => {}),
+    });
+  },
+  async end() {},
+};
 
 export const auth = betterAuth({
   appName: "PIP",
   baseURL: requiredEnv("BETTER_AUTH_URL"),
   secret: requiredEnv("BETTER_AUTH_SECRET"),
-  database: pool,
+  database,
+  advanced: {
+    // The check runs at startup, where Workers forbid I/O. Integration tests check the schema.
+    database: { validateSchema: false },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,

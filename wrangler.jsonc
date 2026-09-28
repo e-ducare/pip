@@ -9,6 +9,12 @@
     "not_found_handling": "none",
     "binding": "ASSETS",
   },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "d7fb78d46dc949d6ac39d96ccfb58ce2",
+    },
+  ],
   "observability": {
     "enabled": true,
   },
