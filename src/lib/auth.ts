@@ -28,6 +28,8 @@ export const auth = betterAuth({
   secret: requiredEnv("BETTER_AUTH_SECRET"),
   database,
   advanced: {
+    // Cloudflare sets this header from the client connection; clients can forge x-forwarded-for.
+    ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
     // The check runs at startup, where Workers forbid I/O. Integration tests check the schema.
     database: { validateSchema: false },
   },
