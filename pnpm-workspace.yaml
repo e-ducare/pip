@@ -3,3 +3,8 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
   workerd: true
+minimumReleaseAgeExclude:
+  - '@cloudflare/workers-response-store@1.0.0'
+  - '@vinext/cloudflare@1.0.0'
+  - '@vinext/types@1.0.0'
+  - vinext@1.0.0
