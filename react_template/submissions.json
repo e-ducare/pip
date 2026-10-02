@@ -1,0 +1,50 @@
+[
+  {
+    "id": "submission-1790334634951",
+    "submittedAt": "2026-09-25T11:10:34.951Z",
+    "situation": "dfgd",
+    "risk": "dfd",
+    "goal": "dfd",
+    "mission": "safasdfaf",
+    "change": "dsfd",
+    "sustainability": "dfdfd",
+    "people": [
+      {
+        "name": "sds",
+        "info": "sdfsdf sdf s",
+        "familyMembers": "5645",
+        "age": ""
+      },
+      {
+        "name": "",
+        "info": "",
+        "familyMembers": "",
+        "age": ""
+      },
+      {
+        "name": "",
+        "info": "",
+        "familyMembers": "",
+        "age": ""
+      }
+    ],
+    "costs": [
+      {
+        "description": "housing",
+        "amount": "",
+        "category": "NRC"
+      },
+      {
+        "description": "toilets",
+        "amount": "",
+        "category": "NRC"
+      },
+      {
+        "description": "",
+        "amount": "",
+        "category": "NRC"
+      }
+    ],
+    "additionalInfo": ""
+  }
+]
