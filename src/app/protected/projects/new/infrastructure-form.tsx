@@ -88,10 +88,12 @@ function trimRows<T extends { id: string }>(rows: T[]) {
 }
 
 export type Role = "applicant" | "reviewer";
+type Review = "approved" | "rejected";
 
 export function InfrastructureForm({ role, isReviewing }: { role?: Role; isReviewing: boolean }) {
   const [people, setPeople] = useState(() => threeOf(newPerson));
   const [costs, setCosts] = useState(() => threeOf(newCost));
+  const [reviews, setReviews] = useState<Record<string, Review>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -118,13 +120,19 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
     setError("");
     const form = event.currentTarget;
     if (!form.reportValidity()) return;
+    if (role === "reviewer" && textFields.some((field) => !reviews[field.name])) {
+      setError("Approve or reject every field before submitting.");
+      return;
+    }
 
     setSubmitting(true);
     // Only the textareas have a name, so FormData holds just the text fields.
+    // Disabled textareas are left out, so a reviewer sends only their feedback.
     const payload = {
       ...Object.fromEntries(new FormData(form)),
       people: trimRows(people),
       costs: trimRows(costs),
+      ...(role === "reviewer" && { reviews }),
     };
 
     try {
@@ -146,6 +154,7 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
   function startNewRequest() {
     setPeople(threeOf(newPerson));
     setCosts(threeOf(newCost));
+    setReviews({});
     setSubmitted(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -191,7 +200,45 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
       </section>
 
       {textFields.map((field) => (
-        <TextField key={field.name} {...field} required />
+        <div key={field.name} className="flex flex-row items-end gap-4">
+          <TextField {...field} required={role === "applicant"} disabled={role === "reviewer"} />
+          {role === "reviewer" && (
+            <>
+              <div className="flex shrink-0 flex-col gap-2">
+                <ReviewButton
+                  active={reviews[field.name] === "approved"}
+                  onClick={() =>
+                    setReviews((current) => ({ ...current, [field.name]: "approved" }))
+                  }
+                >
+                  ✓ Approve
+                </ReviewButton>
+                <ReviewButton
+                  active={reviews[field.name] === "rejected"}
+                  tone="reject"
+                  onClick={() =>
+                    setReviews((current) => ({ ...current, [field.name]: "rejected" }))
+                  }
+                >
+                  × Reject
+                </ReviewButton>
+              </div>
+              {reviews[field.name] === "rejected" && (
+                <textarea
+                  name={`${field.name}_reviewer`}
+                  aria-label={`Review feedback for ${field.label}`}
+                  placeholder="Explain what needs to change"
+                  rows={field.rows}
+                  required
+                  className={cn(
+                    fieldControl,
+                    "block min-h-22 w-1/2 resize-y rounded-lg border border-[#ff9d8d]/50 bg-[#121211]/74 px-4.5 py-4.25 focus:border-[#ff9d8d] focus:bg-[#151513]",
+                  )}
+                />
+              )}
+            </>
+          )}
+        </div>
       ))}
 
       <section className={tableSection}>
@@ -472,6 +519,36 @@ function RemoveButton({ label, onClick }: { label: string; onClick: () => void }
       onClick={onClick}
     >
       ×
+    </button>
+  );
+}
+
+function ReviewButton({
+  active,
+  tone = "approve",
+  onClick,
+  children,
+}: {
+  active: boolean;
+  tone?: "approve" | "reject";
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const color =
+    tone === "approve"
+      ? "aria-pressed:border-[#c9f17a] aria-pressed:bg-[#c9f17a] aria-pressed:text-[#080808] hover:border-[#c9f17a]"
+      : "aria-pressed:border-[#ff9d8d] aria-pressed:bg-[#ff9d8d] aria-pressed:text-[#080808] hover:border-[#ff9d8d]";
+  return (
+    <button
+      className={cn(
+        "min-w-24 cursor-pointer rounded-[3px] border border-[#373734] px-3 py-2 text-xs font-semibold text-[#f4f1ea] transition-colors duration-180",
+        color,
+      )}
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+    >
+      {children}
     </button>
   );
 }

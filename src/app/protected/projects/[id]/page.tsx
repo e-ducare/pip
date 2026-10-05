@@ -13,7 +13,7 @@ export default async function ProjectFormReview({
   const { id } = await params;
   const role = ((await searchParams).role as Role | undefined) || "applicant";
 
-  // const searchParams = useSearchParams()
+  // TODO: fetch project data by id
 
   console.log({ id, role });
 
