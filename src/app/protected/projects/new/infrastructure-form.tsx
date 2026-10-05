@@ -1,3 +1,6 @@
+"use client";
+
+import { cn } from "cn";
 import { useState } from "react";
 
 const kicker = "mb-1.75 text-[10px] font-bold tracking-[0.16em] text-[#c9f17a] uppercase";
@@ -6,7 +9,7 @@ const fieldControl =
   "w-full text-sm leading-normal text-[#f4f1ea] outline-none transition-colors duration-180 placeholder:text-[#777771]";
 const cellControl = `${fieldControl} min-h-13.75 px-3.5 py-2.75 focus:bg-[#181817]`;
 const cell = "border-r border-b border-[#373734] last:border-r-0";
-const formSection = "mt-10.5 max-sm:mt-8.5";
+const formSection = "mt-10.5 max-sm:mt-8.5 w-full";
 const tableSection = "mt-16 max-sm:mt-8.5";
 
 const textFields = [
@@ -84,12 +87,31 @@ function trimRows<T extends { id: string }>(rows: T[]) {
   );
 }
 
-export function InfrastructureForm() {
+export type Role = "applicant" | "reviewer";
+
+export function InfrastructureForm({ role, isReviewing }: { role?: Role; isReviewing: boolean }) {
   const [people, setPeople] = useState(() => threeOf(newPerson));
   const [costs, setCosts] = useState(() => threeOf(newCost));
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  let mode = "newForm";
+
+  if (role == "applicant" && isReviewing) {
+    mode = "re-submitting";
+  }
+  if (role == "reviewer" && isReviewing) {
+    mode = "feedback";
+  }
+
+  let submitBtnText = "Submit request";
+
+  if (mode === "re-submitting") {
+    submitBtnText = "Save review";
+  }
+  if (mode === "feedback") {
+    submitBtnText = "Submit feedback";
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -328,6 +350,7 @@ export function InfrastructureForm() {
         label="Additional information"
         rows={2}
         placeholder="If any."
+        disabled={role === "reviewer"}
       />
 
       <div className="mt-16.75 flex items-center justify-between gap-5 border-t border-[#373734] pt-6.25 max-sm:flex-col-reverse max-sm:items-stretch">
@@ -339,7 +362,7 @@ export function InfrastructureForm() {
           type="submit"
           disabled={submitting}
         >
-          <span>{submitting ? "Submitting..." : "Submit request"}</span>
+          <span>{submitBtnText}</span>
           <span aria-hidden="true">→</span>
         </button>
       </div>
@@ -356,16 +379,20 @@ function TextField({
   rows,
   placeholder,
   required = false,
+  ...rest
 }: {
   name: string;
   label: string;
   rows: number;
   placeholder: string;
   required?: boolean;
-}) {
+} & Omit<
+  React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+  "name" | "id" | "rows" | "placeholder" | "required" | "className"
+>) {
   return (
     <section className={formSection}>
-      <label className="mb-3.25 block text-lg font-semibold tracking-[-0.025em]" htmlFor={name}>
+      <label className="mb-3.25 block text-lg font-semibold tracking-tight" htmlFor={name}>
         {label}
         {required && (
           <>
@@ -377,12 +404,13 @@ function TextField({
         )}
       </label>
       <textarea
+        {...rest}
         id={name}
         name={name}
         rows={rows}
         placeholder={placeholder}
         required={required}
-        className={`${fieldControl} block min-h-22 resize-y rounded-[4px] border border-[#373734] bg-[#121211]/74 px-4.5 py-4.25 focus:border-[#c9f17a] focus:bg-[#151513]`}
+        className={`${fieldControl} block min-h-22 resize-y rounded-lg border border-[#373734] bg-[#121211]/74 px-4.5 py-4.25 focus:border-[#c9f17a] focus:bg-[#151513]`}
       />
     </section>
   );
@@ -392,7 +420,7 @@ function SectionHeading({ number, title, note }: { number: string; title: string
   return (
     <div className="mb-4.75 flex items-end justify-between gap-6 max-sm:block">
       <div className="flex items-baseline gap-3.25">
-        <span className="text-[11px] font-bold tracking-[0.1em] text-[#c9f17a]">{number}</span>
+        <span className="text-[11px] font-bold tracking-widest text-[#c9f17a]">{number}</span>
         <h2 className="text-[25px] leading-[1.08] font-bold tracking-[-0.045em]">{title}</h2>
         <p className={`text-[11px] ${muted}`}>
           <span className="text-[20px] text-[#c9f17a]">*</span>

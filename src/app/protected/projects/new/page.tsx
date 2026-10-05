@@ -5,13 +5,14 @@ import { useState } from "react";
 import { InfrastructureForm } from "./infrastructure-form";
 
 export default function NewPage() {
+  // TODO:
+  // check user is applicant
   const router = useRouter();
   const [projectType, setProjectType] = useState("infrastructure");
   const [showInfrastructureForm, setShowInfrastructureForm] = useState(false);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    console.log({ projectType });
 
     if (projectType === "infrastructure") setShowInfrastructureForm(true);
     else router.push(`/protected/projects/new/${projectType}`);
@@ -35,7 +36,7 @@ export default function NewPage() {
         </div>
       </div>
       {showInfrastructureForm ? (
-        <InfrastructureForm />
+        <InfrastructureForm role="applicant" isReviewing={false} />
       ) : (
         <section className="max-w-155 pb-15" aria-labelledby="project-type-title">
           <p className="mb-1.75 text-[10px] font-bold tracking-[0.16em] text-[#c9f17a] uppercase">
