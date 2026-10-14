@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project type | E-ducare</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <div class="brand-row">
+        <div class="brand-mark">
+          <img src="/images/educare-logo.png" alt="E-ducare logo" />
+        </div>
+        <div>
+          <p class="eyebrow">E-ducare / project type</p>
+          <h1>Project Funding</h1>
+        </div>
+      </div>
+
+      <section class="project-type-content" aria-labelledby="project-type-title">
+        <p class="section-kicker">Start your request</p>
+        <h2 id="project-type-title">What type of project are you funding?</h2>
+        <p class="section-note">
+          Choose the option that best describes the support you need.
+        </p>
+
+        <form id="project-type-form">
+          <fieldset class="project-options">
+            <legend class="sr-only">Project type</legend>
+            <label class="project-option" for="infrastructure">
+              <input
+                id="infrastructure"
+                type="radio"
+                name="projectType"
+                value="infrastructure"
+              />
+              <span class="option-copy">
+                <span class="option-title">Infrastructure</span>
+                <span class="option-description">
+                  This project involves building or improving schools, colleges,
+                  and related facilities.
+                </span>
+              </span>
+            </label>
+            <label class="project-option" for="sponsorship">
+              <input
+                id="sponsorship"
+                type="radio"
+                name="projectType"
+                value="sponsorship"
+              />
+              <span class="option-copy">
+                <span class="option-title">Sponsorship</span>
+                <span class="option-description">
+                  This project provides sponsorship to support a child's
+                  education and well-being.
+                </span>
+              </span>
+            </label>
+          </fieldset>
+          <button class="submit-button project-confirm" type="submit" disabled>
+            <span>Confirm</span><span aria-hidden="true">→</span>
+          </button>
+        </form>
+      </section>
+    </main>
+    <script src="/project-type.js"></script>
+  </body>
+</html>

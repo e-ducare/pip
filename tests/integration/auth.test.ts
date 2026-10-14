@@ -40,8 +40,8 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     ) {
       throw new Error("TEST_DATABASE_URL must target local pip_auth_test without query parameters");
     }
-    const global = globalThis as typeof globalThis & { authPool?: Pool };
-    if (global.authPool) throw new Error("Refusing to reuse an existing auth database pool");
+    const global = globalThis as typeof globalThis & { dbPool?: Pool };
+    if (global.dbPool) throw new Error("Refusing to reuse an existing database pool");
     vi.stubEnv("DATABASE_URL", databaseURL!);
     vi.stubEnv("BETTER_AUTH_URL", baseURL);
     vi.stubEnv("BETTER_AUTH_SECRET", "pip-integration-only-secret-at-least-32-characters");
@@ -54,7 +54,7 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
       throw new Error("Refusing to run against a database other than pip_auth_test");
     }
     ({ auth } = await import("@/lib/auth"));
-    authPool = global.authPool;
+    authPool = global.dbPool;
   });
 
   async function clean() {
@@ -75,8 +75,8 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
       if (authPool) await clean();
     } finally {
       await Promise.all([db?.end(), authPool?.end()]);
-      const global = globalThis as typeof globalThis & { authPool?: Pool };
-      if (authPool && global.authPool === authPool) delete global.authPool;
+      const global = globalThis as typeof globalThis & { dbPool?: Pool };
+      if (authPool && global.dbPool === authPool) delete global.dbPool;
       vi.unstubAllEnvs();
     }
   });

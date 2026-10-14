@@ -8,6 +8,10 @@ export async function proxy(request: NextRequest) {
     returnHeaders: true,
   });
   if (!session) {
+    // API callers need a status code; following a redirect would hand them the login page.
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+      return NextResponse.json({ ok: false, error: "Not signed in." }, { status: 401 });
+    }
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
   const response = NextResponse.next();
