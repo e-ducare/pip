@@ -2,7 +2,14 @@
 
 import { Metadata } from "next";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
+import { useRef, useState } from "react";
+import {
+  ACCEPTED_EXTENSIONS,
+  isAllowedAttachment,
+  MAX_FILE_SIZE,
+  MAX_FILES_PER_REQUEST,
+} from "@/lib/attachments";
 
 // export const metadata: Metadata = {
 //   title: "Upload project files | E-ducare",
@@ -10,37 +17,8 @@ import { useEffect, useRef, useState } from "react";
 //     "Select spreadsheets, PDFs, and images to include with your E-ducare project.",
 // };
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
-const ALLOWED_MIME_TYPES: Record<string, string[]> = {
-  csv: ["text/csv", "application/csv", "application/vnd.ms-excel"],
-  xls: [
-    "application/vnd.ms-excel",
-    "application/msexcel",
-    "application/x-msexcel",
-    "application/x-ms-excel",
-    "application/x-excel",
-    "application/xls",
-  ],
-  xlsx: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
-  pdf: ["application/pdf"],
-  jpg: ["image/jpeg"],
-  jpeg: ["image/jpeg"],
-  png: ["image/png"],
-  gif: ["image/gif"],
-  webp: ["image/webp"],
-  avif: ["image/avif"],
-  bmp: ["image/bmp", "image/x-bmp", "image/x-ms-bmp"],
-  tif: ["image/tiff"],
-  tiff: ["image/tiff"],
-  heic: ["image/heic", "image/heic-sequence"],
-  heif: ["image/heif", "image/heif-sequence"],
-};
-const GENERIC_MIME_TYPES = new Set([
-  "",
-  "application/octet-stream",
-  "binary/octet-stream",
-  "text/plain",
-]);
+// Files sent to Google Drive at the same time, so slow field connections aren't saturated.
+const PARALLEL_UPLOADS = 3;
 
 let nextFileId = 0;
 
@@ -49,7 +27,14 @@ type UploadItem = {
   file: File;
   path: string;
   progress: number;
-  status: "simulating" | "ready";
+  status: "queued" | "uploading" | "uploaded" | "failed";
+};
+
+const STATUS_LABELS: Record<UploadItem["status"], string> = {
+  queued: "Ready to upload",
+  uploading: "Uploading",
+  uploaded: "Uploaded",
+  failed: "Upload failed",
 };
 
 type IncomingFile = {
@@ -62,37 +47,31 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function fileExtension(fileName: string) {
-  return fileName.split(".").pop()?.toLowerCase() ?? "";
-}
-
-function isAllowedAttachment(file: File) {
-  const extension = fileExtension(file.name);
-  if (!Object.hasOwn(ALLOWED_MIME_TYPES, extension)) return false;
-
-  const mimeType = file.type.split(";")[0].trim().toLowerCase();
-  return (
-    GENERIC_MIME_TYPES.has(mimeType) ||
-    ALLOWED_MIME_TYPES[extension].includes(mimeType)
-  );
+// XMLHttpRequest rather than fetch, because fetch can't report upload progress.
+function uploadToDrive(uploadUrl: string, file: File, onProgress: (percent: number) => void) {
+  return new Promise<void>((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("PUT", uploadUrl);
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress(Math.round((event.loaded / event.total) * 100));
+      }
+    };
+    request.onload = () =>
+      request.status >= 200 && request.status < 300
+        ? resolve()
+        : reject(new Error(`Google Drive responded with ${request.status}.`));
+    request.onerror = () => reject(new Error("Network error."));
+    request.send(file);
+  });
 }
 
 function SheetIcon({ className = "" }: { className?: string }) {
   return (
-    <svg
-      aria-hidden="true"
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      focusable="false"
-    >
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" focusable="false">
       <path d="M6 2.75h8l4 4v14.5H6z" fill="currentColor" opacity=".12" />
       <path d="M14 2.75v4h4" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M8.5 10.5h7M8.5 13.5h7M8.5 16.5h7"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
+      <path d="M8.5 10.5h7M8.5 13.5h7M8.5 16.5h7" stroke="currentColor" strokeWidth="1.5" />
       <path d="M11 10.5v6M14 10.5v6" stroke="currentColor" strokeWidth="1.2" />
     </svg>
   );
@@ -152,43 +131,23 @@ function CloseIcon() {
 }
 
 export default function Home() {
+  const { id: projectId } = useParams<{ id: string }>();
   const inputRef = useRef<HTMLInputElement>(null);
   const dragDepth = useRef(0);
   const [items, setItems] = useState<UploadItem[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [confirmation, setConfirmation] = useState("");
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setItems((currentItems) => {
-        if (!currentItems.some((item) => item.status === "simulating"))
-          return currentItems;
-        return currentItems.map((item) => {
-          if (item.status === "ready") return item;
-          const progress = Math.min(item.progress + 4, 100);
-          return {
-            ...item,
-            progress,
-            status: progress === 100 ? "ready" : "simulating",
-          };
-        });
-      });
-    }, 120);
-
-    return () => window.clearInterval(timer);
-  }, []);
 
   function addFiles(fileList: FileList | File[] | IncomingFile[]) {
     setConfirmation("");
     const files: ArrayLike<File | IncomingFile> = fileList;
-    const incomingFiles = Array.from(
-      files,
-      (item): IncomingFile => ({
-        file: item instanceof File ? item : item.file,
-        path: item instanceof File ? item.name : item.path,
-      }),
-    );
+    const incomingFiles = Array.from(files, (item): IncomingFile => ({
+      file: item instanceof File ? item : item.file,
+      path: item instanceof File ? item.name : item.path,
+    }));
     const nextErrors: string[] = [];
     const acceptedFiles: IncomingFile[] = [];
     const existingKeys = new Set(
@@ -226,7 +185,7 @@ export default function Home() {
           file,
           path,
           progress: 0,
-          status: "simulating" as const,
+          status: "queued" as const,
         })),
       ]);
     }
@@ -265,20 +224,93 @@ export default function Home() {
   function clearQueue() {
     setItems([]);
     setErrors([]);
+    setUploadError("");
     setConfirmation("");
     setIsDragging(false);
     dragDepth.current = 0;
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  const allReady =
-    items.length > 0 && items.every((item) => item.status === "ready");
+  const pendingItems = items.filter((item) => item.status === "queued" || item.status === "failed");
+  const uploadedCount = items.filter((item) => item.status === "uploaded").length;
 
-  function handleAttach() {
-    if (!allReady) return;
-    setConfirmation(
-      "Demo complete: these files are only listed in this page. They have not been uploaded or saved.",
+  function updateItem(id: string, changes: Partial<UploadItem>) {
+    setItems((currentItems) =>
+      currentItems.map((item) => (item.id === id ? { ...item, ...changes } : item)),
     );
+  }
+
+  // Queued and previously failed files are uploaded; failed ones can be retried with
+  // another click.
+  async function handleUpload() {
+    if (pendingItems.length === 0 || isUploading) return;
+    setIsUploading(true);
+    setErrors([]);
+    setUploadError("");
+    setConfirmation("");
+
+    let uploaded = 0;
+    let failed = 0;
+    try {
+      for (let start = 0; start < pendingItems.length; start += MAX_FILES_PER_REQUEST) {
+        const batch = pendingItems.slice(start, start + MAX_FILES_PER_REQUEST);
+        const response = await fetch(`/api/projects/${projectId}/uploads`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            files: batch.map(({ file, path }) => ({
+              name: path,
+              type: file.type,
+              size: file.size,
+            })),
+          }),
+        });
+        const result: { ok: boolean; uploadUrls?: string[]; error?: string } = await response
+          .json()
+          .catch(() => ({ ok: false, error: "Could not start the upload." }));
+        if (!result.ok || !result.uploadUrls) {
+          throw new Error(result.error ?? "Could not start the upload.");
+        }
+        const uploadUrls = result.uploadUrls;
+
+        let nextIndex = 0;
+        async function uploadNext() {
+          while (nextIndex < batch.length) {
+            const index = nextIndex++;
+            const item = batch[index];
+            updateItem(item.id, { status: "uploading", progress: 0 });
+            try {
+              await uploadToDrive(uploadUrls[index], item.file, (progress) =>
+                updateItem(item.id, { progress }),
+              );
+              updateItem(item.id, { status: "uploaded", progress: 100 });
+              uploaded++;
+            } catch {
+              updateItem(item.id, { status: "failed" });
+              failed++;
+            }
+          }
+        }
+        await Promise.all(
+          Array.from({ length: Math.min(PARALLEL_UPLOADS, batch.length) }, uploadNext),
+        );
+      }
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Could not start the upload.");
+      return;
+    } finally {
+      setIsUploading(false);
+    }
+
+    if (failed > 0) {
+      setUploadError(
+        `${failed} ${failed === 1 ? "file" : "files"} could not be uploaded. Select "Upload files" to try again.`,
+      );
+    } else if (uploaded > 0) {
+      setConfirmation(
+        `${uploaded} ${uploaded === 1 ? "file was" : "files were"} saved to the project folder.`,
+      );
+    }
   }
 
   return (
@@ -308,10 +340,10 @@ export default function Home() {
         <div className="card-heading">
           <div>
             <p className="eyebrow">PROJECT DOCUMENTS</p>
-            <h1 id="page-title">Upload and attach files</h1>
+            <h1 id="page-title">Upload files</h1>
             <p className="intro">
-              Add spreadsheets, PDFs, or images to your project. Choose files
-              from your device or drop them into the area below.
+              Add spreadsheets, PDFs, or images to your project. Choose files from your device or
+              drop them into the area below.
             </p>
           </div>
         </div>
@@ -320,7 +352,7 @@ export default function Home() {
           ref={inputRef}
           className="file-input"
           type="file"
-          accept=".csv,.xls,.xlsx,.pdf,.jpg,.jpeg,.png,.gif,.webp,.avif,.bmp,.tif,.tiff,.heic,.heif"
+          accept={ACCEPTED_EXTENSIONS}
           multiple
           aria-label="Choose project attachments"
           onChange={(event) => {
@@ -346,9 +378,7 @@ export default function Home() {
             <UploadCloudIcon />
           </div>
           <p className="dropzone-title">
-            {isDragging
-              ? "Drop your files to add them"
-              : "Drag and drop files here"}
+            {isDragging ? "Drop your files to add them" : "Drag and drop files here"}
           </p>
           <div className="browse-actions">
             <button
@@ -386,17 +416,28 @@ export default function Home() {
           </div>
         )}
 
+        {uploadError && (
+          <div className="inline-alert" role="alert">
+            <span className="alert-symbol" aria-hidden="true">
+              !
+            </span>
+            <div>
+              <strong>Upload problem</strong>
+              {uploadError}
+            </div>
+          </div>
+        )}
+
         {items.length > 0 && (
           <section className="file-section" aria-labelledby="file-list-title">
             <div className="file-list-heading">
               <div>
                 <h2 id="file-list-title">Selected files</h2>
                 <p>
-                  {items.length} {items.length === 1 ? "file" : "files"} · Demo
-                  progress only
+                  {items.length} {items.length === 1 ? "file" : "files"} · {uploadedCount} uploaded
                 </p>
               </div>
-              <span className="queue-badge">{items.length} queued</span>
+              <span className="queue-badge">{pendingItems.length} queued</span>
             </div>
 
             <ul className="file-list">
@@ -411,49 +452,42 @@ export default function Home() {
                         <span className="file-name" title={item.path}>
                           {item.path}
                         </span>
-                        <span className="file-size">
-                          {formatFileSize(item.file.size)}
-                        </span>
+                        <span className="file-size">{formatFileSize(item.file.size)}</span>
                       </div>
                       <span
-                        className={`file-status${item.status === "ready" ? " file-status-ready" : ""}`}
+                        className={`file-status${item.status === "uploaded" ? " file-status-ready" : ""}${item.status === "failed" ? " file-status-failed" : ""}`}
                         role="status"
                       >
-                        {item.status === "ready" ? (
-                          <CheckIcon />
-                        ) : (
-                          <span className="status-spinner" />
-                        )}
-                        {item.status === "ready"
-                          ? "Ready · demo"
-                          : "Preparing · demo"}
+                        {item.status === "uploaded" && <CheckIcon />}
+                        {item.status === "uploading" && <span className="status-spinner" />}
+                        {STATUS_LABELS[item.status]}
                       </span>
                     </div>
                     <div className="progress-line">
                       <div
                         className="progress-track"
                         role="progressbar"
-                        aria-label={`Demo progress for ${item.file.name}`}
+                        aria-label={`Upload progress for ${item.file.name}`}
                         aria-valuemin={0}
                         aria-valuemax={100}
                         aria-valuenow={item.progress}
                       >
-                        <span
-                          className="progress-fill"
-                          style={{ width: `${item.progress}%` }}
-                        />
+                        <span className="progress-fill" style={{ width: `${item.progress}%` }} />
                       </div>
                       <span className="progress-value">{item.progress}%</span>
                     </div>
                   </div>
-                  <button
-                    className="icon-button remove-button"
-                    type="button"
-                    aria-label={`Remove ${item.file.name}`}
-                    onClick={() => removeFile(item.id)}
-                  >
-                    <CloseIcon />
-                  </button>
+                  {(item.status === "queued" || item.status === "failed") && (
+                    <button
+                      className="icon-button remove-button"
+                      type="button"
+                      aria-label={`Remove ${item.file.name}`}
+                      disabled={isUploading}
+                      onClick={() => removeFile(item.id)}
+                    >
+                      <CloseIcon />
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -474,23 +508,27 @@ export default function Home() {
             i
           </span>
           <p>
-            <strong>Preview mode.</strong> Progress is simulated for this demo.
-            Files stay in this browser page and are not sent to E-ducare or
-            saved anywhere.
+            Files are saved to this project&apos;s folder in the E-ducare Google Drive when you
+            select <strong>Attach files</strong>.
           </p>
         </div>
 
         <footer className="card-footer">
-          <button className="cancel-button" type="button" onClick={clearQueue}>
+          <button
+            className="cancel-button"
+            type="button"
+            disabled={isUploading}
+            onClick={clearQueue}
+          >
             Cancel
           </button>
           <button
             className="attach-button"
             type="button"
-            disabled={!allReady}
-            onClick={handleAttach}
+            disabled={pendingItems.length === 0 || isUploading}
+            onClick={handleUpload}
           >
-            Attach files
+            {isUploading ? "Uploading…" : "Upload files"}
             <span aria-hidden="true">→</span>
           </button>
         </footer>

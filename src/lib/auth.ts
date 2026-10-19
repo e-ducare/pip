@@ -15,7 +15,6 @@ export const auth = betterAuth({
     requireEmailVerification: true,
     revokeSessionsOnPasswordReset: true,
     async sendResetPassword({ user, url }) {
-      console.log(url);
       sendAuthEmail({
         to: user.email,
         subject: "Reset your PIP password",

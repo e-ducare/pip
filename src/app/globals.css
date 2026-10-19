@@ -332,7 +332,7 @@
 
 .dropzone:hover,
 .dropzone:focus-visible {
-  border-color: var(--blue);
+  border-color: var(--accent);
   background: #f1f6ff;
 }
 
@@ -366,7 +366,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--blue);
+  color: var(--accent);
   font-size: 12px;
   font-weight: 700;
   text-decoration: underline;
@@ -375,7 +375,7 @@
 }
 
 .browse-button:hover {
-  color: var(--blue-dark);
+  color: var(--accent-foreground);
 }
 
 .dropzone-help {
@@ -560,11 +560,15 @@
   height: 13px;
 }
 
+.file-status-failed {
+  color: #a43d33;
+}
+
 .status-spinner {
   width: 10px;
   height: 10px;
   border: 1.5px solid #d8e2f5;
-  border-top-color: var(--blue);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 750ms linear infinite;
 }
@@ -718,14 +722,14 @@
 
 .attach-button {
   min-width: 128px;
-  border: 1px solid var(--blue);
-  background: var(--blue);
+  border: 1px solid var(--accent);
+  background: var(--accent);
   color: #fff;
 }
 
 .attach-button:not(:disabled):hover {
-  border-color: var(--blue-dark);
-  background: var(--blue-dark);
+  border-color: var(--accent-foreground);
+  background: var(--primary);
   transform: translateY(-1px);
 }
 
