@@ -136,6 +136,8 @@
 /* convert this to tailwind css classes*/
 
 .page-shell {
+  --blue: #2563eb;
+  --blue-dark: #1d4ed8;
   width: min(100% - 40px, 1080px);
   min-height: 100vh;
   margin: 0 auto;
