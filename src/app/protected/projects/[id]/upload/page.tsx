@@ -1,6 +1,5 @@
 "use client";
 
-import { Metadata } from "next";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
@@ -142,6 +141,7 @@ export default function Home() {
   const [confirmation, setConfirmation] = useState("");
 
   function addFiles(fileList: FileList | File[] | IncomingFile[]) {
+    if (isUploading) return;
     setConfirmation("");
     const files: ArrayLike<File | IncomingFile> = fileList;
     const incomingFiles = Array.from(files, (item): IncomingFile => ({
@@ -217,11 +217,13 @@ export default function Home() {
   }
 
   function removeFile(id: string) {
+    if (isUploading) return;
     setItems((currentItems) => currentItems.filter((item) => item.id !== id));
     setConfirmation("");
   }
 
   function clearQueue() {
+    if (isUploading) return;
     setItems([]);
     setErrors([]);
     setUploadError("");
@@ -508,8 +510,8 @@ export default function Home() {
             i
           </span>
           <p>
-            Files are saved to this project&apos;s folder in the E-ducare Google Drive when you
-            select <strong>Attach files</strong>.
+            <strong>Secure upload.</strong> Files are saved to this project&apos;s folder in the
+            E-ducare Google Drive when you select <strong>Upload files</strong>.
           </p>
         </div>
 
