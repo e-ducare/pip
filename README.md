@@ -12,13 +12,19 @@ pnpm install
 
 The Worker reads these server-only settings. Locally, put them in `.env.local`; Wrangler loads `.env` and `.env.local` as the local Worker's secrets unless a `.dev.vars` file exists.
 
-| Setting              | Value                                                                              | Production source                        |
-| -------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------- |
-| `BETTER_AUTH_URL`    | Application origin, `http://localhost:3000` locally or the exact production origin | `vars` in `wrangler.jsonc`               |
-| `BETTER_AUTH_SECRET` | Random secret of at least 32 characters, unique to each environment                | Worker secret                            |
-| `RESEND_API_KEY`     | Resend API key with sending permission for the verified domain                     | Worker secret                            |
-| `RESEND_FROM_EMAIL`  | Sender on that domain, such as `PIP <auth@pip.e-ducare.org>`                       | `vars` in `wrangler.jsonc`               |
-| Database             | `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` locally                 | `HYPERDRIVE` binding in `wrangler.jsonc` |
+| Setting                    | Value                                                                                                               | Production source                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `BETTER_AUTH_URL`          | Application origin, `http://localhost:3000` locally or the exact production origin                                  | `vars` in `wrangler.jsonc`               |
+| `BETTER_AUTH_SECRET`       | Random secret of at least 32 characters, unique to each environment                                                 | Worker secret                            |
+| `RESEND_API_KEY`           | Resend API key with sending permission for the verified domain                                                      | Worker secret                            |
+| `RESEND_FROM_EMAIL`        | Sender on that domain, such as `PIP <auth@pip.e-ducare.org>`                                                        | `vars` in `wrangler.jsonc`               |
+| Database                   | `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` locally                                                  | `HYPERDRIVE` binding in `wrangler.jsonc` |
+| `GOOGLE_SA_EMAIL`          | Google service account email                                                                                        | Worker secret                            |
+| `GOOGLE_SA_PRIVATE_KEY`    | That account's private key from its JSON key file, newlines escaped as `\n`                                         | Worker secret                            |
+| `GOOGLE_DRIVE_IMPERSONATE` | E-ducare.org user the service account acts as through domain-wide delegation; a Content manager on the Shared Drive | Worker secret                            |
+| `GOOGLE_DRIVE_FOLDER_ID`   | Shared Drive folder that holds one folder per project                                                               | Worker secret                            |
+
+The Google settings are secrets because the repository is public and they name a staff account. Uploads go from the browser straight to Google Drive through resumable upload sessions, so file contents never pass through the Worker or its request size limits.
 
 Generate the auth secret with `openssl rand -base64 32`. Never prefix these variables with `NEXT_PUBLIC_` or commit their values. Supabase publishable and service-role API keys are not database passwords and are not used by this app.
 
@@ -110,7 +116,7 @@ The account holds the rest of the configuration:
 
 - The `supabase-root-2021-ca` certificate authority, uploaded from `supabase/prod-ca-2021.crt`.
 - The `pip-db` Hyperdrive configuration. It connects to Supabase's direct host, `db.<project-ref>.supabase.co:5432`, as `postgres` with `sslmode=verify-full` against that certificate authority. `wrangler.jsonc` binds it as `HYPERDRIVE`.
-- The `BETTER_AUTH_SECRET` and `RESEND_API_KEY` Worker secrets. Change one with `pnpm exec wrangler secret put <NAME>`.
+- The `BETTER_AUTH_SECRET`, `RESEND_API_KEY`, and four `GOOGLE_*` Worker secrets. Change one with `pnpm exec wrangler secret put <NAME>`.
 
 To set up another account or Worker, upload the certificate authority, then create the Hyperdrive configuration. Hyperdrive tests the connection before saving it.
 
@@ -142,6 +148,8 @@ Preview secrets live in the Previews base configuration, separate from the Worke
 pnpm exec wrangler preview base-config secret put BETTER_AUTH_SECRET
 pnpm exec wrangler preview base-config secret put RESEND_API_KEY
 ```
+
+Set the four `GOOGLE_*` secrets the same way.
 
 Inspect the Worker and its builds with the [`cf` CLI](https://developers.cloudflare.com/cf/get-started/). It keeps its own login, so run `cf auth login` once; add `--profile educare` if that profile is not active.
 

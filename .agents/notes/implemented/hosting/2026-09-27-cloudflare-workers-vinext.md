@@ -15,6 +15,8 @@ The app runs on Cloudflare Workers. vinext builds the unchanged App Router code 
 - Auth reads its secrets at module load, so a new Worker's first deploy must pass them with `wrangler deploy --secrets-file`. Later deploys keep them.
 - vinext ignores `reactCompiler` in `next.config.ts`; the compiler is a `vinext()` option.
 - Workers Builds runs `pnpm run build`, then `npx wrangler deploy` on `main` or `npx wrangler preview` on other branches. The build's `.wrangler/deploy/config.json` points both at `dist/server/wrangler.json`, which keeps the `previews` block.
+- `src/lib/google-drive.ts` calls Drive with `fetch` and signs the service-account JWT with Web Crypto. `@googleapis/drive` authenticated in Node but got 401 from Drive in workerd; its client also forces `Accept-Encoding: gzip`, which workerd passes through undecoded. The access token is cached per isolate as a string until five minutes before expiry.
+- The four `GOOGLE_*` settings are Worker secrets, not `vars`: the repository is public and `GOOGLE_DRIVE_IMPERSONATE` names a staff account.
 - Previews do not inherit top-level bindings or vars, so `wrangler.jsonc` repeats them under `previews`. Previews share the production Hyperdrive configuration by choice: no staging database exists yet.
 - Better Auth uses a dynamic `baseURL` that allows the production host and `*-pip.e-ducare-org.workers.dev`. Each Preview has its own host, so origin checks and email links follow the request host, with `BETTER_AUTH_URL` as the fallback.
 - Locally, miniflare's Hyperdrive proxy runs in Node and honors `sslmode=verify-full&sslrootcert=<path>`. It rejects connection strings without a password.
@@ -28,6 +30,7 @@ The app runs on Cloudflare Workers. vinext builds the unchanged App Router code 
 - A `DATABASE_URL` secret with direct connections. Every request would pay the full TCP, TLS, and auth handshake, without certificate validation.
 - Better Auth constructed per request. Every call site would need a request-scoped factory.
 - `pg.Pool` with `maxUses: 1`. The pool hands a waiting request a client created during another request's release.
+- `@googleapis/drive` on Workers. It fails at runtime there, and its dependency tree targets Node.
 - A staging database for Previews. Deferred until preview traffic justifies a second Supabase project.
 - `trustedOrigins` for preview hosts with a static `baseURL`. Sign-in would work, but email links would point at production.
 - `wrangler preview --var BETTER_AUTH_URL=...` per branch. It depends on how Workers Builds names each Preview.
@@ -35,6 +38,7 @@ The app runs on Cloudflare Workers. vinext builds the unchanged App Router code 
 ## Verification
 
 - `pnpm lint`, `pnpm build`, and `pnpm test` pass, including the integration suite on a throwaway Postgres.
+- In `pnpm dev` (workerd), a signed-in request to `/api/projects/<id>/uploads` created the project folder and returned Drive upload session URLs.
 - An integration test signs up from a preview origin, expects the verification link on that origin, and expects a 403 from an unlisted host.
 - `pnpm dev` and the built Worker passed sign-up, sign-in, repeated `/protected` requests, and a foreign-origin 403 against local Postgres through the Hyperdrive proxy.
 - The production bundle contains no `.env.local` values. The build copies them into `dist/server/.dev.vars` for `pnpm start`; deploys do not upload that file.
