@@ -93,14 +93,28 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     while (delivery.queue.length) await delivery.queue.shift()!();
   }
 
-  function emailLink(subject: string): URL {
+  // Better Auth disables origin checks in test mode unless explicitly configured.
+  async function withOriginChecks() {
+    const { betterAuth } = await import("better-auth");
+    const options: import("better-auth").BetterAuthOptions = auth.options;
+    return betterAuth({
+      ...options,
+      advanced: {
+        ...options.advanced,
+        disableOriginCheck: false,
+        disableCSRFCheck: false,
+      },
+    });
+  }
+
+  function emailLink(subject: string, origin = baseURL): URL {
     const messages = delivery.send.mock.calls.map(([message]) => message);
     const message = messages.filter((message) => message.subject === subject).at(-1);
     expect(message).toBeDefined();
     const link = message!.text.match(/https?:\/\/\S+/)?.[0];
     expect(link).toBeTruthy();
     const url = new URL(link!);
-    expect(url.origin).toBe(baseURL);
+    expect(url.origin).toBe(origin);
     return url;
   }
 
@@ -225,17 +239,7 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
   });
 
   it("rejects untrusted reset and verification redirect URLs", async () => {
-    const { betterAuth } = await import("better-auth");
-    const options: import("better-auth").BetterAuthOptions = auth.options;
-    // Better Auth disables origin checks in test mode unless explicitly configured.
-    const securedAuth = betterAuth({
-      ...options,
-      advanced: {
-        ...options.advanced,
-        disableOriginCheck: false,
-        disableCSRFCheck: false,
-      },
-    });
+    const securedAuth = await withOriginChecks();
     function secureRequest(path: string, body?: Record<string, unknown>) {
       return securedAuth.handler(
         new Request(new URL(path, `${baseURL}/api/auth/`), {
@@ -283,6 +287,34 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     expect(verification.status).toBe(403);
     expect(await verification.json()).toMatchObject({ code: "INVALID_CALLBACK_URL" });
     expect(verification.headers.get("location")).toBeNull();
+  });
+
+  it("serves Worker Previews from their own origin and rejects other hosts", async () => {
+    const securedAuth = await withOriginChecks();
+    function signupFrom(origin: string) {
+      return securedAuth.handler(
+        new Request(new URL("sign-up/email", `${origin}/api/auth/`), {
+          method: "POST",
+          headers: { origin, "content-type": "application/json" },
+          body: JSON.stringify({
+            email: `auth-${randomUUID()}@example.test`,
+            password,
+            name: "Test User",
+          }),
+        }),
+      );
+    }
+
+    // Any branch name matches the "*-pip.e-ducare-org.workers.dev" pattern.
+    const preview = "https://some-branch-pip.e-ducare-org.workers.dev";
+    expect((await signupFrom(preview)).status).toBe(200);
+    await flush();
+    emailLink("Verify your PIP email address", preview);
+
+    delivery.send.mockClear();
+    expect((await signupFrom("https://pip.untrusted.example")).status).toBe(403);
+    await flush();
+    expect(delivery.send).not.toHaveBeenCalled();
   });
 
   it("matches the schema required by the runtime auth configuration", async () => {

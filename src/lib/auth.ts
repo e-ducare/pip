@@ -22,9 +22,16 @@ const database = {
   async end() {},
 };
 
+const baseURL = requiredEnv("BETTER_AUTH_URL");
+
 export const auth = betterAuth({
   appName: "PIP",
-  baseURL: requiredEnv("BETTER_AUTH_URL"),
+  // Worker Previews serve from <preview>-pip.e-ducare-org.workers.dev, so auth takes its
+  // origin and email link host from the request when the host is allowed.
+  baseURL: {
+    allowedHosts: [new URL(baseURL).host, "*-pip.e-ducare-org.workers.dev"],
+    fallback: baseURL,
+  },
   secret: requiredEnv("BETTER_AUTH_SECRET"),
   database,
   advanced: {

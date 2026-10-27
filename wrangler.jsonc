@@ -20,6 +20,19 @@
     "BETTER_AUTH_URL": "https://pip.e-ducare-org.workers.dev",
     "RESEND_FROM_EMAIL": "E-ducare PIP <noreply@pip.e-ducare.org>",
   },
+  // Previews do not inherit the settings above. They share the production database.
+  "previews": {
+    "hyperdrive": [
+      {
+        "binding": "HYPERDRIVE",
+        "id": "d7fb78d46dc949d6ac39d96ccfb58ce2",
+      },
+    ],
+    "vars": {
+      "BETTER_AUTH_URL": "https://pip.e-ducare-org.workers.dev",
+      "RESEND_FROM_EMAIL": "E-ducare PIP <noreply@pip.e-ducare.org>",
+    },
+  },
   "observability": {
     "enabled": true,
   },

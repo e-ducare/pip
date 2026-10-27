@@ -129,3 +129,24 @@ pnpm exec wrangler deploy --config dist/server/wrangler.json --secrets-file /pat
 ```
 
 Workers Logs are enabled in `wrangler.jsonc`, so `console.error` output from auth and email delivery appears in the dashboard.
+
+### Workers Builds and Previews
+
+Workers Builds is connected to the `e-ducare/pip` GitHub repository. Each push runs `pnpm run build` from the repository root. A push to `main` then runs `npx wrangler deploy`; a push to any other branch runs `npx wrangler preview`, which publishes a Preview named after the branch at `https://<preview>-pip.e-ducare-org.workers.dev`. The build writes `.wrangler/deploy/config.json`, which points both commands at `dist/server/wrangler.json`.
+
+Previews take their settings from the `previews` block in `wrangler.jsonc`, not from the top level. They share the production database through the same Hyperdrive configuration, so preview sign-ups and branch bugs affect real data. Auth accepts any `*-pip.e-ducare-org.workers.dev` host and builds email links from the request host.
+
+Preview secrets live in the Previews base configuration, separate from the Worker secrets:
+
+```sh
+pnpm exec wrangler preview base-config secret put BETTER_AUTH_SECRET
+pnpm exec wrangler preview base-config secret put RESEND_API_KEY
+```
+
+Inspect the Worker and its builds with the [`cf` CLI](https://developers.cloudflare.com/cf/get-started/). It keeps its own login, so run `cf auth login` once; add `--profile educare` if that profile is not active.
+
+```sh
+cf workers get pip                         # settings and workers.dev URL
+cf workers deployments list --worker pip   # deployments, live one first
+cf builds workers get <worker-id>          # Workers Builds commands and root directory
+```

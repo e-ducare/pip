@@ -14,6 +14,9 @@ The app runs on Cloudflare Workers. vinext builds the unchanged App Router code 
 - `wrangler.jsonc` pins `account_id`. The first deploy targeted the wrong account because Wrangler was logged in there.
 - Auth reads its secrets at module load, so a new Worker's first deploy must pass them with `wrangler deploy --secrets-file`. Later deploys keep them.
 - vinext ignores `reactCompiler` in `next.config.ts`; the compiler is a `vinext()` option.
+- Workers Builds runs `pnpm run build`, then `npx wrangler deploy` on `main` or `npx wrangler preview` on other branches. The build's `.wrangler/deploy/config.json` points both at `dist/server/wrangler.json`, which keeps the `previews` block.
+- Previews do not inherit top-level bindings or vars, so `wrangler.jsonc` repeats them under `previews`. Previews share the production Hyperdrive configuration by choice: no staging database exists yet.
+- Better Auth uses a dynamic `baseURL` that allows the production host and `*-pip.e-ducare-org.workers.dev`. Each Preview has its own host, so origin checks and email links follow the request host, with `BETTER_AUTH_URL` as the fallback.
 - Locally, miniflare's Hyperdrive proxy runs in Node and honors `sslmode=verify-full&sslrootcert=<path>`. It rejects connection strings without a password.
 - Vitest runs in Node without the vinext plugin. `vitest.config.mts` maps `next/*` to vinext's shims and `cloudflare:workers` to a stub that returns `TEST_DATABASE_URL`.
 - The proxy matcher test imports vinext's `matchesMiddleware` from its `dist` path; vinext does not export it. Next's matcher helper tests code that no longer runs.
@@ -25,10 +28,14 @@ The app runs on Cloudflare Workers. vinext builds the unchanged App Router code 
 - A `DATABASE_URL` secret with direct connections. Every request would pay the full TCP, TLS, and auth handshake, without certificate validation.
 - Better Auth constructed per request. Every call site would need a request-scoped factory.
 - `pg.Pool` with `maxUses: 1`. The pool hands a waiting request a client created during another request's release.
+- A staging database for Previews. Deferred until preview traffic justifies a second Supabase project.
+- `trustedOrigins` for preview hosts with a static `baseURL`. Sign-in would work, but email links would point at production.
+- `wrangler preview --var BETTER_AUTH_URL=...` per branch. It depends on how Workers Builds names each Preview.
 
 ## Verification
 
 - `pnpm lint`, `pnpm build`, and `pnpm test` pass, including the integration suite on a throwaway Postgres.
+- An integration test signs up from a preview origin, expects the verification link on that origin, and expects a 403 from an unlisted host.
 - `pnpm dev` and the built Worker passed sign-up, sign-in, repeated `/protected` requests, and a foreign-origin 403 against local Postgres through the Hyperdrive proxy.
 - The production bundle contains no `.env.local` values. The build copies them into `dist/server/.dev.vars` for `pnpm start`; deploys do not upload that file.
 - The app works on https://pip.e-ducare-org.workers.dev.
@@ -37,3 +44,4 @@ The app runs on Cloudflare Workers. vinext builds the unchanged App Router code 
 
 - Custom domain such as `pip.e-ducare.org`, which changes `BETTER_AUTH_URL`.
 - Shared rate-limit storage before a public launch; the in-memory limiter applies per isolate.
+- Preview isolation: Previews write to the production database.
