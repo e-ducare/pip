@@ -8,9 +8,9 @@
 # testing
 /coverage
 
-# next.js
+# vinext route types
 /.next/
-/out/
+next-env.d.ts
 
 # production
 /build
@@ -34,6 +34,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 supabase/.temp
+/dist/
+.vinext/
+.wrangler/
+.dev.vars*

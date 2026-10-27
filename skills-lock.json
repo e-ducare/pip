@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "migrate-to-vinext": {
+      "source": "cloudflare/vinext",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/migrate-to-vinext/SKILL.md",
+      "computedHash": "8f07ed0f91c07e0bcd3fb4b22440c068882357ef9baa9456dd34e864a49eb315"
+    },
     "supabase": {
       "source": "supabase/agent-skills",
       "sourceType": "github",
