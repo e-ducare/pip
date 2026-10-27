@@ -9,6 +9,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
             <div className="flex gap-5 items-center font-semibold">
               <Link href={"/"}>Home</Link>
+              <Link href={"/protected/projects/your-id/upload"}>Upload (temp)</Link>
             </div>
             <SignOutButton />
           </div>

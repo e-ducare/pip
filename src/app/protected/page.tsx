@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { InfoIcon } from "lucide-react";
 import { Suspense } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 async function UserDetails() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -33,7 +35,9 @@ export default function ProtectedPage() {
         </pre>
       </div>
       <div>
-        <h2 className="font-bold text-2xl mb-4">Next steps</h2>
+        <Button>
+          <Link href="/protected/projects/new">New Project </Link>
+        </Button>
       </div>
     </div>
   );
