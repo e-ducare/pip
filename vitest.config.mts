@@ -3,7 +3,15 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    alias: [
+      { find: "@", replacement: fileURLToPath(new URL("./src", import.meta.url)) },
+      // vinext resolves next/* to its shims during builds; tests run without its plugin.
+      { find: /^next\/(.*)$/, replacement: "vinext/shims/$1" },
+      {
+        find: "cloudflare:workers",
+        replacement: fileURLToPath(new URL("./tests/cloudflare-workers.ts", import.meta.url)),
+      },
+    ],
   },
   test: {
     environment: "node",
