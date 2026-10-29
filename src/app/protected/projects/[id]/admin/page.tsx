@@ -37,9 +37,7 @@ export default async function AdminPage({
             className="size-12 rounded-xl"
           />
           <div>
-            <p className="text-sm font-semibold tracking-wide">
-              E-ducare
-            </p>
+            <p className="text-sm font-semibold tracking-wide">E-ducare</p>
             <p className="text-xs text-[#171815]/55">Project administration</p>
           </div>
         </header>
