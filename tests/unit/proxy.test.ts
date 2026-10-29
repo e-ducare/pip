@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-// vinext does not export the matcher that decides which requests reach the proxy.
-import { matchesMiddleware } from "../../node_modules/vinext/dist/server/middleware-matcher.js";
+import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 
 type GetSession = (context: { headers: Headers; returnHeaders: true }) => Promise<{
   headers: Headers;
@@ -55,6 +54,6 @@ describe("session proxy", () => {
     ["/_next/static/chunk.js", false],
     ["/favicon.ico", false],
   ])("matches %s: %s", (url, matched) => {
-    expect(matchesMiddleware(url, config.matcher)).toBe(matched);
+    expect(unstable_doesMiddlewareMatch({ config, url })).toBe(matched);
   });
 });
