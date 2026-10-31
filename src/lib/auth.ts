@@ -5,17 +5,29 @@ import { sendAuthEmail } from "./auth-email";
 import { requiredEnv } from "./auth-env";
 import { pool } from "./db";
 
+const baseURL = requiredEnv("BETTER_AUTH_URL");
+
 export const auth = betterAuth({
   appName: "PIP",
-  baseURL: requiredEnv("BETTER_AUTH_URL"),
+  // Worker Previews serve from <preview>-pip.e-ducare-org.workers.dev, so auth takes its
+  // origin and email link host from the request when the host is allowed.
+  baseURL: {
+    allowedHosts: [new URL(baseURL).host, "*-pip.e-ducare-org.workers.dev"],
+    fallback: baseURL,
+  },
   secret: requiredEnv("BETTER_AUTH_SECRET"),
   database: pool,
+  advanced: {
+    // Cloudflare sets this header from the client connection; clients can forge x-forwarded-for.
+    ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
+    // The check runs at startup, where Workers forbid I/O. Integration tests check the schema.
+    database: { validateSchema: false },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
     revokeSessionsOnPasswordReset: true,
     async sendResetPassword({ user, url }) {
-      console.log(url);
       sendAuthEmail({
         to: user.email,
         subject: "Reset your PIP password",

@@ -18,7 +18,7 @@ vi.mock("resend", () => ({
   },
 }));
 
-// Never fall back to DATABASE_URL or load a private env file.
+// Never fall back to another database or load a private env file.
 const databaseURL = process.env.TEST_DATABASE_URL;
 const baseURL = "http://localhost:3100";
 const password = "Original-test-password-123!";
@@ -27,7 +27,6 @@ const newPassword = "Replacement-test-password-456!";
 describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
   let auth: typeof import("@/lib/auth").auth;
   let db: Pool | undefined;
-  let authPool: Pool | undefined;
 
   beforeAll(async () => {
     const url = new URL(databaseURL!);
@@ -40,9 +39,6 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     ) {
       throw new Error("TEST_DATABASE_URL must target local pip_auth_test without query parameters");
     }
-    const global = globalThis as typeof globalThis & { dbPool?: Pool };
-    if (global.dbPool) throw new Error("Refusing to reuse an existing database pool");
-    vi.stubEnv("DATABASE_URL", databaseURL!);
     vi.stubEnv("BETTER_AUTH_URL", baseURL);
     vi.stubEnv("BETTER_AUTH_SECRET", "pip-integration-only-secret-at-least-32-characters");
     vi.stubEnv("RESEND_API_KEY", "re_test_never_sent");
@@ -53,8 +49,8 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     if (result.rows[0].name !== "pip_auth_test") {
       throw new Error("Refusing to run against a database other than pip_auth_test");
     }
+    // The cloudflare:workers test stub points auth at TEST_DATABASE_URL.
     ({ auth } = await import("@/lib/auth"));
-    authPool = global.dbPool;
   });
 
   async function clean() {
@@ -72,11 +68,9 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
 
   afterAll(async () => {
     try {
-      if (authPool) await clean();
+      if (auth) await clean();
     } finally {
-      await Promise.all([db?.end(), authPool?.end()]);
-      const global = globalThis as typeof globalThis & { dbPool?: Pool };
-      if (authPool && global.dbPool === authPool) delete global.dbPool;
+      await db?.end();
       vi.unstubAllEnvs();
     }
   });
@@ -99,14 +93,28 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     while (delivery.queue.length) await delivery.queue.shift()!();
   }
 
-  function emailLink(subject: string): URL {
+  // Better Auth disables origin checks in test mode unless explicitly configured.
+  async function withOriginChecks() {
+    const { betterAuth } = await import("better-auth");
+    const options: import("better-auth").BetterAuthOptions = auth.options;
+    return betterAuth({
+      ...options,
+      advanced: {
+        ...options.advanced,
+        disableOriginCheck: false,
+        disableCSRFCheck: false,
+      },
+    });
+  }
+
+  function emailLink(subject: string, origin = baseURL): URL {
     const messages = delivery.send.mock.calls.map(([message]) => message);
     const message = messages.filter((message) => message.subject === subject).at(-1);
     expect(message).toBeDefined();
     const link = message!.text.match(/https?:\/\/\S+/)?.[0];
     expect(link).toBeTruthy();
     const url = new URL(link!);
-    expect(url.origin).toBe(baseURL);
+    expect(url.origin).toBe(origin);
     return url;
   }
 
@@ -231,17 +239,7 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
   });
 
   it("rejects untrusted reset and verification redirect URLs", async () => {
-    const { betterAuth } = await import("better-auth");
-    const options: import("better-auth").BetterAuthOptions = auth.options;
-    // Better Auth disables origin checks in test mode unless explicitly configured.
-    const securedAuth = betterAuth({
-      ...options,
-      advanced: {
-        ...options.advanced,
-        disableOriginCheck: false,
-        disableCSRFCheck: false,
-      },
-    });
+    const securedAuth = await withOriginChecks();
     function secureRequest(path: string, body?: Record<string, unknown>) {
       return securedAuth.handler(
         new Request(new URL(path, `${baseURL}/api/auth/`), {
@@ -289,6 +287,34 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     expect(verification.status).toBe(403);
     expect(await verification.json()).toMatchObject({ code: "INVALID_CALLBACK_URL" });
     expect(verification.headers.get("location")).toBeNull();
+  });
+
+  it("serves Worker Previews from their own origin and rejects other hosts", async () => {
+    const securedAuth = await withOriginChecks();
+    function signupFrom(origin: string) {
+      return securedAuth.handler(
+        new Request(new URL("sign-up/email", `${origin}/api/auth/`), {
+          method: "POST",
+          headers: { origin, "content-type": "application/json" },
+          body: JSON.stringify({
+            email: `auth-${randomUUID()}@example.test`,
+            password,
+            name: "Test User",
+          }),
+        }),
+      );
+    }
+
+    // Any branch name matches the "*-pip.e-ducare-org.workers.dev" pattern.
+    const preview = "https://some-branch-pip.e-ducare-org.workers.dev";
+    expect((await signupFrom(preview)).status).toBe(200);
+    await flush();
+    emailLink("Verify your PIP email address", preview);
+
+    delivery.send.mockClear();
+    expect((await signupFrom("https://pip.untrusted.example")).status).toBe(403);
+    await flush();
+    expect(delivery.send).not.toHaveBeenCalled();
   });
 
   it("matches the schema required by the runtime auth configuration", async () => {
