@@ -135,14 +135,17 @@ The admin pages split at the server/client boundary. Each page's server componen
 
 Server actions enforce the rules that protect data. The UI repeats them only to help the user, for example by disabling "Remove" on the admin's own row.
 
-| Task                                                                    | Owner  | Needs      |
-| ----------------------------------------------------------------------- | ------ | ---------- |
-| PR #18: move the pages to `/protected/admin` in review, then merge      | Zephan | review     |
-| Contract: types and stub actions for users and programs                 | Gian   | #18        |
-| G1 Auth foundation, admin check, Admin nav link, users actions and data | Gian   | contract   |
-| G2 App tables, programs actions and data                                | Gian   | G1         |
-| Z2 Users table on the contract (#14)                                    | Zephan | contract   |
-| Z3 Programs table on the contract (#13)                                 | Zephan | contract   |
-| Z4 Projects belong to a program (#10), frontend and backend             | Zephan | G2, Z2, Z3 |
+Epics: #26 (users, roles, and invites) and #27 (programs and projects).
 
-Gian keeps the migrations, Better Auth config, invite tokens, and server actions. They touch production data, sessions, and Better Auth internals. Z4 is Zephan's first task across the boundary, with Gian reviewing the server check.
+| Issue | Task                                                                 | Owner  | Blocked by    |
+| ----- | -------------------------------------------------------------------- | ------ | ------------- |
+| #18   | Move the pages to `/protected/admin` in review, then merge           | Zephan | review        |
+| #19   | Contract: types and stub actions for users and programs              | Gian   | #18           |
+| #20   | Auth foundation, admin check, Admin nav link, users actions and data | Gian   | #19           |
+| #21   | App tables, programs actions and data                                | Gian   | #20           |
+| #22   | Users table on the contract                                          | Zephan | #19           |
+| #23   | Programs table on the contract, one manager in the form              | Zephan | #19           |
+| #24   | Projects belong to a program, upload access check                    | Zephan | #21, #22, #23 |
+| #25   | Profile page: name, password, sign out                               | Zephan |               |
+
+Gian keeps the migrations, Better Auth config, invite tokens, and server actions. They touch production data, sessions, and Better Auth internals. #24 is Zephan's first task across the boundary, with Gian reviewing the server check.
