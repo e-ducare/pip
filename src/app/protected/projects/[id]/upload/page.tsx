@@ -321,7 +321,7 @@ export default function Home() {
         <div className="flex items-center gap-3">
           <Image
             className="block size-12 rounded-full object-cover max-[600px]:size-10.5"
-            src="/educare-logo.png"
+            src="/images/educare-logo.png"
             alt="E-ducare logo"
             width={48}
             height={48}
