@@ -1,6 +1,10 @@
 # PIP
 
-Next.js App Router application that runs on Cloudflare Workers through [vinext](https://github.com/cloudflare/vinext). It has Better Auth email/password authentication, Supabase-hosted Postgres behind Cloudflare Hyperdrive, and Resend email delivery. Application roles, permissions, organizations, and teams are not configured.
+PIP is E-ducare's internal web app for its Project Implementation Process. That process takes a charity project through the applicant's request, board approval, the legal and finance check, fundraising, implementation and monitoring. E-ducare runs programmes in Tanzania and Vietnam. [AGENTS.md](AGENTS.md#glossary) defines the process terms and lists the phases.
+
+The app has email sign-in, the infrastructure Project Request form, and project file uploads to Google Drive. Roles, approvals, notifications, and the phases after the request are not built.
+
+It is a Next.js App Router application that runs on Cloudflare Workers through [vinext](https://github.com/cloudflare/vinext). It uses Better Auth email/password authentication, Supabase-hosted Postgres behind Cloudflare Hyperdrive, and Resend email delivery.
 
 ## Setup
 
