@@ -124,14 +124,17 @@ Between the app-tables task and "Projects belong to a program", submitting a pro
 
 ## Tasks
 
-The admin pages split at the server/client boundary. Each page's server component loads data and passes it as props. The client component renders it and calls server actions for every change. A typed contract (data types and action signatures) sits between the two and lands first, with stub actions, so frontend and backend work in parallel.
+The admin pages split at the server/client boundary. Each page is a server component that loads data and passes it as props to a client component. The client component calls server actions for every change. The contract between the two landed first, with a sample store behind it, so frontend and backend work in parallel.
 
-| Path under `src/app/protected/admin/` | Owner  | Contents                                                         |
-| ------------------------------------- | ------ | ---------------------------------------------------------------- |
-| `layout.tsx`                          | Gian   | Admin check                                                      |
-| `users/page.tsx`, `users/actions.ts`  | Gian   | Data loading; `"use server"` actions with admin check, SQL, auth |
-| `users/users-table.tsx`               | Zephan | `"use client"` table, filter, dialogs, pending and error states  |
-| `programs/…`                          | same   | Same split                                                       |
+| Path under `src/app/protected/admin/`     | Owner  | Contents                                                            |
+| ----------------------------------------- | ------ | ------------------------------------------------------------------- |
+| `types.ts`                                | shared | The contract: data types, roles, action result. Change it together. |
+| `layout.tsx`                              | Gian   | Admin check                                                         |
+| `users/data.ts`, `programs/data.ts`       | Gian   | Server-only loaders                                                 |
+| `users/actions.ts`, `programs/actions.ts` | Gian   | `"use server"` actions with admin check, SQL, Better Auth           |
+| `sample-store.ts`                         | Gian   | In-memory stand-in behind the stubs; deleted by #20 and #21         |
+| `users/page.tsx`, `programs/page.tsx`     | Zephan | Server component: calls the loader, renders the table               |
+| `users/*-table.tsx`, `programs/…`         | Zephan | `"use client"` table, filter, dialogs, pending and error states     |
 
 Server actions enforce the rules that protect data. The UI repeats them only to help the user, for example by disabling "Remove" on the admin's own row.
 
