@@ -201,13 +201,15 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     expect(delivery.send).toHaveBeenCalledTimes(1);
   });
 
-  it("resets a password once and revokes all existing sessions", async () => {
+  it("resets a password once, revokes existing sessions, and signs in", async () => {
     const email = await verifiedUser();
     const cookies = [await signIn(email), await signIn(email)];
     const token = await resetToken(email);
     const response = await request("reset-password", { token, newPassword });
     expect(response.status).toBe(200);
+    const resetSession = await request("get-session", undefined, sessionCookie(response));
     expect(await response.json()).toMatchObject({ status: true });
+    expect(await resetSession.json()).toMatchObject({ user: { email } });
     const reused = await request("reset-password", { token, newPassword: password });
     expect(reused.status).toBe(400);
     expect(await reused.json()).toMatchObject({ code: "INVALID_TOKEN" });
@@ -219,6 +221,16 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
     expect(await (await request("get-session", undefined, cookie)).json()).toMatchObject({
       user: { email },
     });
+  });
+
+  it("verifies the email of an unverified user who resets their password", async () => {
+    const email = await signup();
+    const token = await resetToken(email);
+    const response = await request("reset-password", { token, newPassword });
+    expect(response.status).toBe(200);
+    const session = await request("get-session", undefined, sessionCookie(response));
+    expect(await session.json()).toMatchObject({ user: { email, emailVerified: true } });
+    await signIn(email, newPassword);
   });
 
   it("rejects invalid and expired reset tokens without changing the password", async () => {
@@ -233,6 +245,7 @@ describe.skipIf(!databaseURL)("Better Auth with isolated Postgres", () => {
       const response = await request("reset-password", { token: candidate, newPassword });
       expect(response.status).toBe(400);
       expect(await response.json()).toMatchObject({ code: "INVALID_TOKEN" });
+      expect(response.headers.getSetCookie()).toEqual([]);
     }
     await signIn(email);
     expect((await request("sign-in/email", { email, password: newPassword })).status).toBe(401);

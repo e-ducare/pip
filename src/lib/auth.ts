@@ -1,6 +1,9 @@
 import "server-only";
 
 import { betterAuth } from "better-auth";
+import type { GenericEndpointContext } from "@better-auth/core";
+import { getCurrentAuthEndpointContext } from "@better-auth/core/context";
+import { setSessionCookie } from "better-auth/cookies";
 import { sendAuthEmail } from "./auth-email";
 import { requiredEnv } from "./auth-env";
 import { pool } from "./db";
@@ -27,6 +30,19 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     revokeSessionsOnPasswordReset: true,
+    // Signs the user in. Better Auth has no option for this yet:
+    // https://github.com/better-auth/better-auth/pull/6246
+    // It calls onPasswordReset after revoking sessions, so the new session survives.
+    async onPasswordReset({ user }) {
+      // Always set here: Better Auth calls this only from its reset endpoint.
+      const ctx = getCurrentAuthEndpointContext() as GenericEndpointContext;
+      // The reset link reached the user's inbox, which proves they own the address.
+      const verifiedUser = await ctx.context.internalAdapter.updateUser(user.id, {
+        emailVerified: true,
+      });
+      const session = await ctx.context.internalAdapter.createSession(user.id);
+      await setSessionCookie(ctx, { session, user: verifiedUser });
+    },
     async sendResetPassword({ user, url }) {
       sendAuthEmail({
         to: user.email,
