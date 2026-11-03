@@ -16,8 +16,9 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
+    "@better-auth/core": "1.7.15",
     "@vinext/cloudflare": "1.3.2",
-    "better-auth": "1.7.4",
+    "better-auth": "1.7.15",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",
     "lucide-react": "^1.45.0",
