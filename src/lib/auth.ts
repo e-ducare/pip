@@ -32,9 +32,9 @@ export const auth = betterAuth({
     revokeSessionsOnPasswordReset: true,
     // Signs the user in. Better Auth has no option for this yet:
     // https://github.com/better-auth/better-auth/pull/6246
-    // It calls onPasswordReset after revoking sessions, so the new session survives.
+    // Better Auth runs this after revoking sessions, so the new session survives.
     async onPasswordReset({ user }) {
-      // Always set here: Better Auth calls this only from its reset endpoint.
+      // Always set here: Better Auth calls this only from inside its endpoints.
       const ctx = getCurrentAuthEndpointContext() as GenericEndpointContext;
       // The reset link reached the user's inbox, which proves they own the address.
       const verifiedUser = await ctx.context.internalAdapter.updateUser(user.id, {
