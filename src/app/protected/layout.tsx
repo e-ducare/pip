@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SignOutButton } from "@/components/sign-out-button";
+import { ProfileNavigation } from "@/components/profile-navigation";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +10,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
             <div className="flex gap-5 items-center font-semibold">
               <Link href={"/"}>Home</Link>
             </div>
-            <SignOutButton />
+            <ProfileNavigation />
           </div>
         </nav>
         <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">{children}</div>

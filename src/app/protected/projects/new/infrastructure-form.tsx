@@ -3,12 +3,12 @@
 import { cn } from "cn";
 import { useState } from "react";
 
-const kicker = "mb-1.75 text-[10px] font-bold tracking-[0.16em] text-[#c9f17a] uppercase";
-const muted = "text-[#96958f]";
+const kicker = "mb-1.75 text-[10px] font-bold tracking-[0.16em] text-grass uppercase";
+const muted = "text-grey-ink";
 const fieldControl =
-  "w-full text-sm leading-normal text-[#f4f1ea] outline-none transition-colors duration-180 placeholder:text-[#777771]";
-const cellControl = `${fieldControl} min-h-13.75 px-3.5 py-2.75 focus:bg-[#181817]`;
-const cell = "border-r border-b border-[#373734] last:border-r-0";
+  "w-full text-sm leading-normal text-body outline-none transition-colors duration-180 placeholder:text-grey-ink";
+const cellControl = `${fieldControl} min-h-13.75 bg-gallifrey px-3.5 py-2.75 focus:bg-grey-light`;
+const cell = "border-r border-b border-grey-mid last:border-r-0";
 const formSection = "mt-10.5 max-sm:mt-8.5 w-full";
 const tableSection = "mt-16 max-sm:mt-8.5";
 
@@ -163,7 +163,7 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
     return (
       <section className="max-w-150 animate-in pt-25 pb-35 duration-500 fade-in slide-in-from-bottom-[18px] max-sm:pt-18">
         <div
-          className="mb-9 grid size-16 place-items-center rounded-full border border-[#c9f17a] text-[30px] text-[#c9f17a]"
+          className="mb-9 grid size-16 place-items-center rounded-full border border-grass text-[30px] text-grass"
           aria-hidden="true"
         >
           ✓
@@ -177,7 +177,7 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
           ready for review.
         </p>
         <button
-          className="mt-9.5 cursor-pointer border-b border-[#c9f17a] pb-1 text-xs leading-[normal] font-semibold text-[#c9f17a]"
+          className="mt-9.5 cursor-pointer border-b border-grass pb-1 text-xs leading-[normal] font-semibold text-grass"
           type="button"
           onClick={startNewRequest}
         >
@@ -232,7 +232,7 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
                   required
                   className={cn(
                     fieldControl,
-                    "block min-h-22 w-1/2 resize-y rounded-lg border border-[#ff9d8d]/50 bg-[#121211]/74 px-4.5 py-4.25 focus:border-[#ff9d8d] focus:bg-[#151513]",
+                    "block min-h-22 w-1/2 resize-y rounded-lg border border-red-300 bg-gallifrey px-4.5 py-4.25 focus:border-red-400 focus:bg-grey-light",
                   )}
                 />
               )}
@@ -326,6 +326,11 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
           title="Summary of projected costs"
           note="Show how the requested funds would be used."
         />
+        <p className={`mb-4 text-xs leading-[1.6] ${muted}`}>
+          NRC - Non recurring costs is a fixed one-time payment that does not repeat
+          <br />
+          RC - recurring costs that repeat every set interval (eg: yearly)
+        </p>
         <Table
           headers={[
             ["Description of items required", "w-[29%]"],
@@ -400,12 +405,12 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
         disabled={role === "reviewer"}
       />
 
-      <div className="mt-16.75 flex items-center justify-between gap-5 border-t border-[#373734] pt-6.25 max-sm:flex-col-reverse max-sm:items-stretch">
+      <div className="mt-16.75 flex items-center justify-between gap-5 border-t border-grey-mid pt-6.25 max-sm:flex-col-reverse max-sm:items-stretch">
         <p className={`text-[11px] max-sm:text-right ${muted}`}>
-          <span className="text-[20px] text-[#c9f17a]">*</span> Required fields
+          <span className="text-[20px] text-grass">*</span> Required fields
         </p>
         <button
-          className="flex min-w-47.5 cursor-pointer items-center justify-between gap-11.25 rounded-[3px] border border-[#c9f17a] bg-[#c9f17a] py-3.75 pr-4.25 pl-5 text-[13px] leading-[normal] font-bold text-[#080808] transition-[translate,background-color] duration-180 enabled:hover:-translate-y-0.5 enabled:hover:bg-[#e0ffab] disabled:cursor-wait disabled:opacity-65 max-sm:w-full"
+          className="flex min-w-47.5 cursor-pointer items-center justify-between gap-11.25 rounded-[3px] border border-grass bg-grass py-3.75 pr-4.25 pl-5 text-[13px] leading-[normal] font-bold text-gallifrey transition-[translate,background-color] duration-180 enabled:hover:-translate-y-0.5 enabled:hover:bg-grass-mid disabled:cursor-wait disabled:opacity-65 max-sm:w-full"
           type="submit"
           disabled={submitting}
         >
@@ -413,7 +418,7 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
           <span aria-hidden="true">→</span>
         </button>
       </div>
-      <p className="mt-4.25 min-h-5 text-right text-xs text-[#ff9d8d]" role="alert">
+      <p className="mt-4.25 min-h-5 text-right text-xs text-red-600" role="alert">
         {error}
       </p>
     </form>
@@ -444,7 +449,7 @@ function TextField({
         {required && (
           <>
             {" "}
-            <span className="text-[#c9f17a]" aria-hidden="true">
+            <span className="text-grass" aria-hidden="true">
               *
             </span>
           </>
@@ -457,7 +462,7 @@ function TextField({
         rows={rows}
         placeholder={placeholder}
         required={required}
-        className={`${fieldControl} block min-h-22 resize-y rounded-lg border border-[#373734] bg-[#121211]/74 px-4.5 py-4.25 focus:border-[#c9f17a] focus:bg-[#151513]`}
+        className={`${fieldControl} block min-h-22 resize-y rounded-lg border border-grey-mid bg-gallifrey px-4.5 py-4.25 focus:border-grass focus:bg-grey-light`}
       />
     </section>
   );
@@ -467,10 +472,10 @@ function SectionHeading({ number, title, note }: { number: string; title: string
   return (
     <div className="mb-4.75 flex items-end justify-between gap-6 max-sm:block">
       <div className="flex items-baseline gap-3.25">
-        <span className="text-[11px] font-bold tracking-widest text-[#c9f17a]">{number}</span>
+        <span className="text-[11px] font-bold tracking-widest text-grass">{number}</span>
         <h2 className="text-[25px] leading-[1.08] font-bold tracking-[-0.045em]">{title}</h2>
         <p className={`text-[11px] ${muted}`}>
-          <span className="text-[20px] text-[#c9f17a]">*</span>
+          <span className="text-[20px] text-grass">*</span>
         </p>
       </div>
       <p
@@ -490,7 +495,7 @@ function Table({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-x-auto border-y border-[#373734]">
+    <div className="overflow-x-auto border-y border-grey-mid">
       <table className="w-full min-w-155 table-fixed border-collapse">
         <thead>
           <tr>
@@ -513,7 +518,7 @@ function Table({
 function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button
-      className={`grid min-h-13.75 w-full cursor-pointer place-items-center text-lg hover:text-[#ff9d8d] ${muted}`}
+      className={`grid min-h-13.75 w-full cursor-pointer place-items-center text-lg text-red-500 hover:text-red-700`}
       type="button"
       aria-label={label}
       onClick={onClick}
@@ -536,12 +541,12 @@ function ReviewButton({
 }) {
   const color =
     tone === "approve"
-      ? "aria-pressed:border-[#c9f17a] aria-pressed:bg-[#c9f17a] aria-pressed:text-[#080808] hover:border-[#c9f17a]"
-      : "aria-pressed:border-[#ff9d8d] aria-pressed:bg-[#ff9d8d] aria-pressed:text-[#080808] hover:border-[#ff9d8d]";
+      ? "aria-pressed:border-grass aria-pressed:bg-grass aria-pressed:text-gallifrey hover:border-grass"
+      : "aria-pressed:border-red-400 aria-pressed:bg-red-400 aria-pressed:text-body hover:border-red-400";
   return (
     <button
       className={cn(
-        "min-w-24 cursor-pointer rounded-[3px] border border-[#373734] px-3 py-2 text-xs font-semibold text-[#f4f1ea] transition-colors duration-180",
+        "min-w-24 cursor-pointer rounded-[3px] border border-grey-mid bg-gallifrey px-3 py-2 text-xs font-semibold text-body transition-colors duration-180",
         color,
       )}
       type="button"
@@ -556,7 +561,7 @@ function ReviewButton({
 function AddButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
     <button
-      className="mt-3.25 cursor-pointer text-xs leading-[normal] font-semibold text-[#c9f17a] hover:underline"
+      className="mt-3.25 cursor-pointer text-xs leading-[normal] font-semibold text-grass hover:underline"
       type="button"
       onClick={onClick}
     >

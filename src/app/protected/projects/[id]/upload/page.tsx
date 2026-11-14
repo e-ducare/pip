@@ -80,17 +80,17 @@ function UploadCloudIcon() {
   return (
     <svg
       aria-hidden="true"
-      className="h-12 w-12 text-blue-600"
+      className="h-12 w-12 text-grass"
       viewBox="0 0 48 48"
       fill="none"
       focusable="false"
     >
       <path
         d="M13.5 35.5h23a7 7 0 0 0 .6-14 13 13 0 0 0-25-2.4 8.3 8.3 0 0 0 1.4 16.4Z"
-        fill="#eaf2ff"
-        stroke="#bfd2f7"
+        fill="#DFFADA"
+        stroke="#C1E7BB"
       />
-      <circle cx="24" cy="27" r="9" fill="#2563eb" />
+      <circle cx="24" cy="27" r="9" fill="#189F4D" />
       <path
         d="M24 31v-8m0 0-3.2 3.2M24 23l3.2 3.2"
         stroke="white"
@@ -328,15 +328,15 @@ export default function Home() {
             priority
           />
           <div>
-            <p className="text-[9px] font-bold tracking-[0.19em] text-[#778090]">E-DUCARE</p>
-            <p className="mt-0.75 text-[17px] font-bold tracking-[-0.035em] text-[#212733]">
+            <p className="text-[9px] font-bold tracking-[0.19em] text-grey-ink">E-DUCARE</p>
+            <p className="mt-0.75 text-[17px] font-bold tracking-[-0.035em] text-body">
               Dataroom
             </p>
           </div>
         </div>
-        <span className="inline-flex items-center gap-2 text-[12px] text-[#707988] max-[600px]:text-[10px]">
+        <span className="inline-flex items-center gap-2 text-[12px] text-grey-ink max-[600px]:text-[10px]">
           <span
-            className="size-1.75 rounded-full bg-[#55ad81] shadow-[0_0_0_3px_#e3f3eb]"
+            className="size-1.75 rounded-full bg-grass shadow-[0_0_0_3px_#C1E7BB]"
             aria-hidden="true"
           />
           Project file portal
@@ -344,21 +344,21 @@ export default function Home() {
       </header>
 
       <section
-        className="mx-auto w-[min(100%,720px)] overflow-hidden rounded-[13px] border border-[rgb(226_230_237/90%)] bg-white px-9.5 pt-8.5 shadow-[0_18px_55px_rgb(35_48_75/8%),0_2px_7px_rgb(35_48_75/3%)] max-[600px]:px-5 max-[600px]:pt-6.25"
+        className="mx-auto w-[min(100%,720px)] overflow-hidden rounded-[13px] border border-grey-mid bg-gallifrey px-9.5 pt-8.5 shadow-[0_18px_55px_rgb(28_53_87/8%),0_2px_7px_rgb(28_53_87/3%)] max-[600px]:px-5 max-[600px]:pt-6.25"
         aria-labelledby="page-title"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="mb-2.25 text-[9px] font-bold tracking-[0.17em] text-[#72809a]">
+            <p className="mb-2.25 text-[9px] font-bold tracking-[0.17em] text-grey-ink">
               PROJECT DOCUMENTS
             </p>
             <h1
               id="page-title"
-              className="text-[clamp(24px,3vw,29px)] leading-[1.16] font-bold tracking-[-0.045em] text-[#262c37]"
+              className="text-[clamp(24px,3vw,29px)] leading-[1.16] font-bold tracking-[-0.045em] text-body"
             >
               Upload files
             </h1>
-            <p className="mt-2.75 max-w-136.25 text-[13px] leading-[1.65] text-[#717987] max-[600px]:max-w-97.5 max-[600px]:text-[12px]">
+            <p className="mt-2.75 max-w-136.25 text-[13px] leading-[1.65] text-grey-ink max-[600px]:max-w-97.5 max-[600px]:text-[12px]">
               Add spreadsheets, PDFs, or images to your project. Choose files from your device or
               drop them into the area below.
             </p>
@@ -378,10 +378,10 @@ export default function Home() {
           }}
         />
         <div
-          className={`flex min-h-53.25 cursor-pointer flex-col items-center justify-center rounded-[8px] border-[1.5px] px-4.5 pt-5.5 pb-4.75 outline-none transition-[border-color,background-color,box-shadow] duration-150 hover:border-accent hover:bg-[#f1f6ff] focus-visible:border-accent focus-visible:bg-[#f1f6ff] focus-visible:shadow-[0_0_0_3px_rgb(40_100_232/17%)] max-[600px]:min-h-51.25 max-[600px]:px-3 ${
+          className={`flex min-h-53.25 cursor-pointer flex-col items-center justify-center rounded-[8px] border-[1.5px] border-courgette bg-cucumber px-4.5 pt-5.5 pb-4.75 outline-none transition-[border-color,background-color,box-shadow] duration-150 hover:border-grass hover:bg-semi-courgette focus-visible:border-grass focus-visible:bg-semi-courgette focus-visible:shadow-[0_0_0_3px_rgb(24_159_77/17%)] max-[600px]:min-h-51.25 max-[600px]:px-3 ${
             isDragging
-              ? "border-solid border-[#174fca] bg-[#eaf2ff] shadow-[inset_0_0_0_2px_rgb(40_100_232/9%)]"
-              : "border-dashed border-[#8bb2ff] bg-[#f8fbff]"
+              ? "border-solid border-grass-dark bg-semi-courgette shadow-[inset_0_0_0_2px_rgb(24_159_77/9%)]"
+              : "border-dashed border-courgette bg-cucumber"
           }`}
           role="group"
           aria-label="Choose or drop project files"
@@ -398,7 +398,7 @@ export default function Home() {
           <div className="mb-1.75 grid h-14 w-16 place-items-center">
             <UploadCloudIcon />
           </div>
-          <p className="text-[13px] font-semibold text-[#343c4a]">
+          <p className="text-[13px] font-semibold text-body">
             {isDragging ? "Drop your files to add them" : "Drag and drop files here"}
           </p>
           <div>
@@ -413,11 +413,11 @@ export default function Home() {
               Browse files
             </button>
           </div>
-          <p className="mt-3 text-[10px] text-[#858d99]" id="dropzone-help">
+          <p className="mt-3 text-[10px] text-grey-ink" id="dropzone-help">
             Select multiple files if needed. Maximum size is 50 MB per file.
           </p>
 
-          <span className="mt-2.75 text-[9px] font-bold tracking-widest text-[#9aa2ae]">
+          <span className="mt-2.75 text-[9px] font-bold tracking-widest text-grey-ink">
             Ensure the files are named appropriately before uploading.
           </span>
         </div>
@@ -465,14 +465,14 @@ export default function Home() {
           <section className="mt-6.25" aria-labelledby="file-list-title">
             <div className="mb-2.75 flex items-center justify-between gap-3">
               <div>
-                <h2 id="file-list-title" className="text-[12px] font-bold text-[#313947]">
+                <h2 id="file-list-title" className="text-[12px] font-bold text-body">
                   Selected files
                 </h2>
-                <p className="mt-1 text-[10px] text-[#8b929e]">
+                <p className="mt-1 text-[10px] text-grey-ink">
                   {items.length} {items.length === 1 ? "file" : "files"} · {uploadedCount} uploaded
                 </p>
               </div>
-              <span className="rounded-[20px] bg-[#f2f5fa] px-2 py-1.25 text-[9px] font-semibold text-[#6f7887]">
+              <span className="rounded-[20px] bg-grey-light px-2 py-1.25 text-[9px] font-semibold text-grey-ink">
                 {pendingItems.length} queued
               </span>
             </div>
@@ -480,45 +480,45 @@ export default function Home() {
             <ul className="grid gap-2">
               {items.map((item) => (
                 <li
-                  className="flex min-w-0 items-center gap-3 rounded-[8px] border border-[#edf0f4] bg-[#fbfcfd] px-3 pt-3 pb-2.75 max-[600px]:gap-2 max-[600px]:pr-2 max-[600px]:pl-2.25"
+                  className="flex min-w-0 items-center gap-3 rounded-[8px] border border-grey-mid bg-gallifrey px-3 pt-3 pb-2.75 max-[600px]:gap-2 max-[600px]:pr-2 max-[600px]:pl-2.25"
                   key={item.id}
                 >
-                  <span className="grid size-8.75 flex-none place-items-center rounded-[7px] border border-[#e7ebf1] bg-white text-[#0b9b78]">
+                  <span className="grid size-8.75 flex-none place-items-center rounded-[7px] border border-grey-mid bg-gallifrey text-grass">
                     <SheetIcon className="size-5.25" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="mb-2.25 flex items-start justify-between gap-3">
                       <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.25 gap-y-0.75">
                         <span
-                          className="max-w-full truncate text-[11px] font-semibold text-[#3b4350]"
+                          className="max-w-full truncate text-[11px] font-semibold text-body"
                           title={item.path}
                         >
                           {item.path}
                         </span>
-                        <span className="text-[9px] whitespace-nowrap text-[#9299a4]">
+                        <span className="text-[9px] whitespace-nowrap text-grey-ink">
                           {formatFileSize(item.file.size)}
                         </span>
                       </div>
                       <span
                         className={`inline-flex flex-none items-center gap-1.25 text-[9px] max-[600px]:max-w-23 max-[600px]:flex-wrap max-[600px]:justify-end max-[600px]:text-right ${
                           item.status === "uploaded"
-                            ? "text-[#24815c]"
+                            ? "text-grass"
                             : item.status === "failed"
                               ? "text-[#a43d33]"
-                              : "text-[#8290a2]"
+                              : "text-grey-ink"
                         }`}
                         role="status"
                       >
                         {item.status === "uploaded" && <CheckIcon />}
                         {item.status === "uploading" && (
-                          <span className="size-2.5 animate-spin rounded-full border-[1.5px] border-[#d8e2f5] border-t-accent" />
+                          <span className="size-2.5 animate-spin rounded-full border-[1.5px] border-grey-mid border-t-grass" />
                         )}
                         {STATUS_LABELS[item.status]}
                       </span>
                     </div>
                     <div className="flex items-center gap-2.25">
                       <div
-                        className="h-1.25 flex-1 overflow-hidden rounded-[5px] bg-[#e9edf3]"
+                        className="h-1.25 flex-1 overflow-hidden rounded-[5px] bg-grey-mid"
                         role="progressbar"
                         aria-label={`Upload progress for ${item.file.name}`}
                         aria-valuemin={0}
@@ -526,18 +526,18 @@ export default function Home() {
                         aria-valuenow={item.progress}
                       >
                         <span
-                          className="block h-full rounded-[inherit] bg-linear-to-r from-[#2672f2] to-[#4486ff] transition-[width] duration-120 ease-linear"
+                          className="block h-full rounded-[inherit] bg-linear-to-r from-grass-dark to-grass transition-[width] duration-120 ease-linear"
                           style={{ width: `${item.progress}%` }}
                         />
                       </div>
-                      <span className="min-w-6.75 text-right text-[9px] text-[#7a8494]">
+                      <span className="min-w-6.75 text-right text-[9px] text-grey-ink">
                         {item.progress}%
                       </span>
                     </div>
                   </div>
                   {(item.status === "queued" || item.status === "failed") && (
                     <button
-                      className="ml-0.5 grid size-6.75 flex-none cursor-pointer place-items-center rounded-[6px] text-[#77808e] transition-colors duration-140 hover:bg-[#f0f3f8] hover:text-[#303847]"
+                      className="ml-0.5 grid size-6.75 flex-none cursor-pointer place-items-center rounded-[6px] text-grey-ink transition-colors duration-140 hover:bg-grey-light hover:text-body"
                       type="button"
                       aria-label={`Remove ${item.file.name}`}
                       disabled={isUploading}
@@ -554,33 +554,33 @@ export default function Home() {
 
         {confirmation && (
           <p
-            className="mt-3.5 flex items-start gap-2.25 rounded-[7px] border border-[#d7eddf] bg-[#f3fbf6] px-3 py-2.75 text-[11px] leading-normal text-[#327150]"
+            className="mt-3.5 flex items-start gap-2.25 rounded-[7px] border border-courgette bg-cucumber px-3 py-2.75 text-[11px] leading-normal text-grass"
             role="status"
           >
-            <span className="grid size-4.5 flex-none place-items-center rounded-full bg-[#dff3e7]">
+            <span className="grid size-4.5 flex-none place-items-center rounded-full bg-semi-courgette">
               <CheckIcon />
             </span>
             {confirmation}
           </p>
         )}
 
-        <div className="mt-4.75 flex items-start gap-2.25 rounded-[7px] bg-[#f5f7fa] px-3 py-2.75">
+        <div className="mt-4.75 flex items-start gap-2.25 rounded-[7px] bg-grey-light px-3 py-2.75">
           <span
-            className="grid size-4 flex-none place-items-center rounded-full border border-[#8b96a7] font-serif text-[11px] font-bold text-[#758092] italic"
+            className="grid size-4 flex-none place-items-center rounded-full border border-grey-ink font-serif text-[11px] font-bold text-grey-ink italic"
             aria-hidden="true"
           >
             i
           </span>
-          <p className="text-[10px] leading-[1.55] text-[#707988]">
-            <strong className="text-[#4c5666]">Secure upload.</strong> Files are saved to this
+          <p className="text-[10px] leading-[1.55] text-grey-ink">
+            <strong className="text-body">Secure upload.</strong> Files are saved to this
             project&apos;s folder in the E-ducare Google Drive when you select{" "}
-            <strong className="text-[#4c5666]">Upload files</strong>.
+            <strong className="text-body">Upload files</strong>.
           </p>
         </div>
 
-        <footer className="-mx-9.5 mt-5.5 flex justify-end gap-2.25 border-t border-[#eef0f4] bg-[#fdfdfe] px-9.5 py-4 max-[600px]:-mx-5 max-[600px]:px-5">
+        <footer className="-mx-9.5 mt-5.5 flex justify-end gap-2.25 border-t border-grey-mid bg-gallifrey px-9.5 py-4 max-[600px]:-mx-5 max-[600px]:px-5">
           <button
-            className="inline-flex min-h-9.5 cursor-pointer items-center justify-center gap-4.25 rounded-[6px] border border-[#e2e6ec] bg-white px-4 text-[11px] font-semibold text-[#626c7b] transition duration-150 hover:border-[#c8ced8] hover:bg-[#f8f9fb]"
+            className="inline-flex min-h-9.5 cursor-pointer items-center justify-center gap-4.25 rounded-[6px] border border-grey-mid bg-gallifrey px-4 text-[11px] font-semibold text-body transition duration-150 hover:border-grey-ink hover:bg-grey-light"
             type="button"
             disabled={isUploading}
             onClick={clearQueue}
@@ -588,7 +588,7 @@ export default function Home() {
             Cancel
           </button>
           <button
-            className="inline-flex min-h-9.5 min-w-32 cursor-pointer items-center justify-center gap-4.25 rounded-[6px] border border-accent bg-accent px-4 text-[11px] font-semibold text-white transition duration-150 enabled:hover:-translate-y-px enabled:hover:border-accent-foreground enabled:hover:bg-primary disabled:cursor-not-allowed disabled:border-[#dfe4ec] disabled:bg-[#e9edf3] disabled:text-[#9ba3af]"
+            className="inline-flex min-h-9.5 min-w-32 cursor-pointer items-center justify-center gap-4.25 rounded-[6px] border border-grass bg-grass px-4 text-[11px] font-semibold text-gallifrey transition duration-150 enabled:hover:-translate-y-px enabled:hover:border-grass-mid enabled:hover:bg-grass-mid disabled:cursor-not-allowed disabled:border-grey-mid disabled:bg-grey-light disabled:text-grey-ink"
             type="button"
             disabled={pendingItems.length === 0 || isUploading}
             onClick={handleUpload}
@@ -601,7 +601,7 @@ export default function Home() {
         </footer>
       </section>
 
-      <p className="mt-4.25 text-center text-[10px] text-[#9aa1ad]">
+      <p className="mt-4.25 text-center text-[10px] text-grey-ink">
         E-ducare · Project file portal
       </p>
     </main>

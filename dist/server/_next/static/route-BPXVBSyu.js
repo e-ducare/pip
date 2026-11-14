@@ -1,0 +1,1 @@
+import{t as e}from"./auth-CAlfX6bX.js";function t(e){let t=async t=>`handler`in e?e.handler(t):e(t);return{GET:t,POST:t,PATCH:t,PUT:t,DELETE:t}}var{GET:n,POST:r}=t(e);export{n as GET,r as POST};
