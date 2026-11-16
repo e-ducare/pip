@@ -1,1 +1,0 @@
-import{r as e}from"./navigation.react-server-DQ6HNsSx.js";function t(){e(`/protected`)}export{t as default};
