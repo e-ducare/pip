@@ -28,6 +28,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+# Wrangler Secrets 
+.dev.vars
+.dev.vars.*
 
 # vercel
 .vercel
@@ -41,3 +44,4 @@ supabase/.temp
 .vinext
 .wrangler
 dist
+# .env ignoring does not cover '.dev.vars ' since it's a (different) wrangler framework. 

@@ -83,7 +83,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <section className="w-full max-w-2xl space-y-6">
+    <section className="w-full max-w-6xl space-y-6">
       <Button
         type="button"
         variant="ghost"

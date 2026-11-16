@@ -27,6 +27,8 @@ type OpenMenu = "email" | "roles" | null;
 
 const maxUserNameLength = 100;
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
+const isAllowedEduCareEmail = (email: string) =>
+  /^[A-Za-z0-9._%+\-]+@e-ducare\.org$/.test(email.trim());
 const normalizeUserName = (name: string) => name.trim().toLowerCase();
 const availableEmails = ["alex@e-ducare.org", "maya@e-ducare.org", "sam@e-ducare.org"];
 const availableRoles = roles;
@@ -88,6 +90,8 @@ export default function AdminUsersClient({
     currentEmail &&
     users.some((user) => normalizeEmail(user.email) === normalizeEmail(currentEmail)),
   );
+  const newEmailIsInvalid =
+    emailMode === "new" && newEmail.includes("@") && !isAllowedEduCareEmail(newEmail);
   const userNameAlreadyExists = Boolean(
     userName.trim() &&
     users.some((user) => normalizeUserName(user.name) === normalizeUserName(userName)),
@@ -283,6 +287,7 @@ export default function AdminUsersClient({
     event.preventDefault();
     const email = emailMode === "existing" ? selectedEmail : newEmail.trim();
     if (!email) return;
+    if (emailMode === "new" && !isAllowedEduCareEmail(email)) return;
     if (!userName.trim()) return;
     if (users.some((user) => normalizeUserName(user.name) === normalizeUserName(userName))) {
       return;
@@ -782,6 +787,8 @@ export default function AdminUsersClient({
                     title="Enter a valid @e-ducare.org email address."
                     value={newEmail}
                     onChange={(event) => setNewEmail(event.target.value)}
+                    aria-invalid={newEmailIsInvalid}
+                    aria-describedby={newEmailIsInvalid ? "user-email-domain-error" : undefined}
                     placeholder="name@e-ducare.org"
                     className="min-h-13 w-full rounded-xl border border-grey-mid bg-gallifrey px-3.5 text-sm text-body shadow-sm placeholder:text-grey-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grass-mid"
                   />
@@ -829,6 +836,11 @@ export default function AdminUsersClient({
                       </ul>
                     )}
                   </>
+                )}
+                {newEmailIsInvalid && (
+                  <p id="user-email-domain-error" role="alert" className="mt-2 text-sm text-red-700">
+                    Enter a valid email address ending in @e-ducare.org.
+                  </p>
                 )}
                 {emailAlreadyExists && (
                   <p role="alert" className="mt-2 text-sm text-red-700">
@@ -936,7 +948,8 @@ export default function AdminUsersClient({
                   !(emailMode === "existing" ? selectedEmail : newEmail.trim()) ||
                   !userName.trim() ||
                   userNameAlreadyExists ||
-                  emailAlreadyExists
+                  emailAlreadyExists ||
+                  (emailMode === "new" && !isAllowedEduCareEmail(newEmail))
                 }
                 className="min-h-11 w-full rounded-lg bg-grass px-5 py-3 text-sm font-semibold text-gallifrey transition hover:bg-grass-dark disabled:cursor-not-allowed disabled:opacity-45 sm:w-1/2"
               >
