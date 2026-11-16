@@ -4,8 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown, LoaderCircle, Plus, RotateCw, Trash2, X } from "lucide-react";
-import { roles, type AdminUser, type Role } from "../../../../admin/types";
-import { resendInvite, setRoles } from "../../../../admin/users/actions";
+import { roles, type AdminUser, type Role } from "../types";
+import { resendInvite, setRoles } from "./actions";
 
 type UserStatus = "Invite Pending" | "Active" | "Removed";
 type UserTab = Exclude<UserStatus, "Removed">;
@@ -332,10 +332,7 @@ export default function AdminUsersClient({
         </header>
 
         <div className="mb-9 mt-10 text-center sm:mb-12 sm:mt-12">
-          <Link
-            href={adminPath}
-            className="mb-3 inline-block text-sm text-grass hover:underline"
-          >
+          <Link href={adminPath} className="mb-3 inline-block text-sm text-grass hover:underline">
             Admin
           </Link>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Admin / Users</h1>
@@ -510,10 +507,7 @@ export default function AdminUsersClient({
                                   >
                                     <span className="mt-0.5 grid size-4 shrink-0 place-items-center rounded border border-slate-300">
                                       {isSelected && (
-                                        <Check
-                                          aria-hidden="true"
-                                          className="size-3.5 text-grass"
-                                        />
+                                        <Check aria-hidden="true" className="size-3.5 text-grass" />
                                       )}
                                     </span>
                                     <span>

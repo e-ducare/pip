@@ -236,10 +236,7 @@ export default function AdminProgramsPage() {
         </header>
 
         <div className="mb-9 mt-10 text-center sm:mb-12 sm:mt-12">
-          <Link
-            href={adminPath}
-            className="mb-3 inline-block text-sm text-grass hover:underline"
-          >
+          <Link href={adminPath} className="mb-3 inline-block text-sm text-grass hover:underline">
             Admin
           </Link>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Admin / Programs</h1>
@@ -579,9 +576,7 @@ export default function AdminProgramsPage() {
                               <Check aria-hidden="true" className="size-3.5 text-grass" />
                             )}
                           </span>
-                          <span className="block text-sm font-medium text-body">
-                            {manager}
-                          </span>
+                          <span className="block text-sm font-medium text-body">{manager}</span>
                         </button>
                       </li>
                     ))}
