@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "cn";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const kicker = "mb-1.75 text-[10px] font-bold tracking-[0.16em] text-grass uppercase";
 const muted = "text-grey-ink";
@@ -94,6 +94,8 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
   const [people, setPeople] = useState(() => threeOf(newPerson));
   const [costs, setCosts] = useState(() => threeOf(newCost));
   const [reviews, setReviews] = useState<Record<string, Review>>({});
+  const [fundsNeededBy, setFundsNeededBy] = useState("");
+  const [dateError, setDateError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -120,6 +122,14 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
     setError("");
     const form = event.currentTarget;
     if (!form.reportValidity()) return;
+    if (role === "applicant" && !fundsNeededBy) {
+      const message = "Select the date by which the funds are needed.";
+      setDateError(message);
+      setError(message);
+      document.getElementById("fundsNeededBy")?.focus();
+      return;
+    }
+    setDateError("");
     if (role === "reviewer" && textFields.some((field) => !reviews[field.name])) {
       setError("Approve or reject every field before submitting.");
       return;
@@ -155,6 +165,8 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
     setPeople(threeOf(newPerson));
     setCosts(threeOf(newCost));
     setReviews({});
+    setFundsNeededBy("");
+    setDateError("");
     setSubmitted(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -397,6 +409,22 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
         </AddButton>
       </section>
 
+      <DateField
+        name="fundsNeededBy"
+        label="Funds needed by"
+        value={fundsNeededBy}
+        onChange={(value) => {
+          setFundsNeededBy(value);
+          if (value) {
+            setDateError("");
+            setError("");
+          }
+        }}
+        error={dateError}
+        required={role === "applicant"}
+        disabled={role === "reviewer"}
+      />
+
       <TextField
         name="additionalInfo"
         label="Additional information"
@@ -464,6 +492,322 @@ function TextField({
         required={required}
         className={`${fieldControl} block min-h-22 resize-y rounded-lg border border-grey-mid bg-gallifrey px-4.5 py-4.25 focus:border-grass focus:bg-grey-light`}
       />
+    </section>
+  );
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+const longDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+
+function parseDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+function toISODate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function formatDisplayDate(value: string) {
+  const date = parseDate(value);
+  return date ? shortDateFormatter.format(date) : "";
+}
+
+function DateField({
+  name,
+  label,
+  value,
+  onChange,
+  error = "",
+  required = false,
+  disabled = false,
+}: {
+  name: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  required?: boolean;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [viewDate, setViewDate] = useState(() => startOfMonth(parseDate(value) ?? new Date()));
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const selectedDate = parseDate(value);
+  const todayValue = toISODate(new Date());
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const leadingDays = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days = Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(year, month, index - leadingDays + 1);
+    return {
+      date,
+      value: toISODate(date),
+      outside: index < leadingDays || index >= leadingDays + daysInMonth,
+    };
+  });
+  const currentYear = new Date().getFullYear();
+  const firstYear = Math.min(currentYear - 5, year);
+  const lastYear = Math.max(currentYear + 20, year);
+  const years = Array.from({ length: lastYear - firstYear + 1 }, (_, index) => firstYear + index);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      buttonRef.current?.focus();
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  function toggleCalendar() {
+    if (!open) setViewDate(startOfMonth(selectedDate ?? new Date()));
+    setOpen((current) => !current);
+  }
+
+  function changeMonth(offset: number) {
+    setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
+  }
+
+  function showCurrentMonth() {
+    setViewDate(startOfMonth(new Date()));
+  }
+
+  function selectDate(date: Date) {
+    onChange(toISODate(date));
+    setViewDate(startOfMonth(date));
+    setOpen(false);
+    buttonRef.current?.focus();
+  }
+
+  return (
+    <section className={formSection}>
+      <p id={`${name}-label`} className="mb-3.25 block text-lg font-semibold tracking-tight">
+        {label}
+        {required && (
+          <>
+            {" "}
+            <span className="text-grass" aria-hidden="true">
+              *
+            </span>
+          </>
+        )}
+      </p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div ref={containerRef} className="relative">
+          <button
+            ref={buttonRef}
+            id={name}
+            type="button"
+            className={cn(
+              "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-grey-mid bg-gallifrey px-4 text-[13px] leading-[normal] font-semibold text-body transition-colors duration-180 hover:border-grass hover:bg-cucumber focus-visible:border-grass focus-visible:ring-3 focus-visible:ring-grass/20 focus-visible:outline-none aria-expanded:border-grass aria-expanded:bg-cucumber disabled:cursor-not-allowed disabled:opacity-50",
+              error && "border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20",
+            )}
+            aria-describedby={error ? `${name}-label ${name}-error` : `${name}-label`}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            aria-controls={open ? `${name}-calendar` : undefined}
+            aria-invalid={Boolean(error)}
+            aria-required={required}
+            disabled={disabled}
+            onClick={toggleCalendar}
+          >
+            <svg
+              className="size-4 text-grass"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M16 3v4M8 3v4M3 10h18" />
+            </svg>
+            <span>Select Date</span>
+          </button>
+
+          {open && (
+            <div
+              id={`${name}-calendar`}
+              role="dialog"
+              aria-label={`Choose a date for ${label}`}
+              className="absolute top-[calc(100%+0.5rem)] left-0 z-30 w-72 origin-top-left animate-in rounded-lg border border-grey-mid bg-gallifrey p-3.5 shadow-[0_18px_45px_rgb(28_53_87_/_14%)] duration-150 fade-in-0 zoom-in-95"
+            >
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1">
+                  <select
+                    aria-label="Month"
+                    value={month}
+                    className="cursor-pointer rounded-md bg-transparent py-1 text-sm font-bold text-body outline-none transition-colors duration-150 hover:text-grass focus-visible:bg-cucumber"
+                    onChange={(event) => setViewDate(new Date(year, Number(event.target.value), 1))}
+                  >
+                    {MONTHS.map((monthName, index) => (
+                      <option key={monthName} value={index}>
+                        {monthName}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label="Year"
+                    value={year}
+                    className="cursor-pointer rounded-md bg-transparent py-1 text-sm font-bold text-body outline-none transition-colors duration-150 hover:text-grass focus-visible:bg-cucumber"
+                    onChange={(event) =>
+                      setViewDate(new Date(Number(event.target.value), month, 1))
+                    }
+                  >
+                    {years.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    className="cursor-pointer rounded-md px-1.5 py-1 text-[11px] font-semibold text-grey-ink transition-colors duration-150 hover:bg-cucumber hover:text-body focus-visible:bg-cucumber"
+                    aria-label="Go to the current month"
+                    onClick={showCurrentMonth}
+                  >
+                    Now
+                  </button>
+                  <button
+                    type="button"
+                    className="grid size-7 cursor-pointer place-items-center rounded-md text-grey-ink transition-colors duration-150 hover:bg-cucumber hover:text-body focus-visible:bg-cucumber"
+                    aria-label="Previous month"
+                    onClick={() => changeMonth(-1)}
+                  >
+                    <svg
+                      className="size-3.5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="grid size-7 cursor-pointer place-items-center rounded-md text-grey-ink transition-colors duration-150 hover:bg-cucumber hover:text-body focus-visible:bg-cucumber"
+                    aria-label="Next month"
+                    onClick={() => changeMonth(1)}
+                  >
+                    <svg
+                      className="size-3.5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {WEEKDAYS.map((weekday) => (
+                  <span
+                    key={weekday}
+                    className="grid h-7 place-items-center text-[10px] font-semibold tracking-[0.08em] text-grey-ink"
+                  >
+                    {weekday}
+                  </span>
+                ))}
+                {days.map((day) => {
+                  const isSelected = day.value === value;
+                  const isToday = day.value === todayValue;
+                  return (
+                    <button
+                      key={day.value}
+                      type="button"
+                      className={cn(
+                        "grid size-8 place-items-center rounded-md text-xs transition-colors duration-150 outline-none",
+                        day.outside ? "text-grey-ink/50" : "text-body",
+                        isSelected
+                          ? "bg-grass font-semibold text-gallifrey hover:bg-grass-mid"
+                          : isToday
+                            ? "border border-grass font-semibold text-grass hover:bg-cucumber"
+                            : "hover:bg-cucumber focus-visible:bg-cucumber",
+                      )}
+                      aria-label={longDateFormatter.format(day.date)}
+                      aria-pressed={isSelected}
+                      aria-current={isToday ? "date" : undefined}
+                      onClick={() => selectDate(day.date)}
+                    >
+                      {day.date.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <p aria-live="polite" className="min-h-5 text-sm text-body">
+          {value ? formatDisplayDate(value) : ""}
+        </p>
+
+        {value && !disabled && (
+          <button
+            type="button"
+            className="cursor-pointer border-b border-grey-mid text-[11px] font-semibold text-grey-ink transition-colors duration-180 hover:border-body hover:text-body"
+            onClick={() => onChange("")}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+      {error && (
+        <p id={`${name}-error`} className="mt-2 text-xs text-red-600" role="alert">
+          {error}
+        </p>
+      )}
+      <input type="hidden" name={name} value={value} disabled={disabled} />
     </section>
   );
 }
