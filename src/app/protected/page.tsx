@@ -1,44 +1,31 @@
 import { redirect } from "next/navigation";
-
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { InfoIcon } from "lucide-react";
-import { Suspense } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 
-async function UserDetails() {
+export default async function ProtectedPage() {
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session) {
     redirect("/auth/login");
   }
 
-  return JSON.stringify(session.user, null, 2);
-}
-
-export default function ProtectedPage() {
   return (
-    <div className="flex-1 w-full flex flex-col gap-12">
-      <div className="w-full">
-        <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">
-          <InfoIcon size="16" strokeWidth={2} />
-          This is a protected page.
-        </div>
+    <section className="flex w-full flex-col items-start gap-8">
+      <h1 className="text-[clamp(32px,5vw,42px)] leading-[1.15] font-normal tracking-[-0.025em] text-black">
+        Welcome {session.user.name || "there"}
+      </h1>
+      <div className="flex flex-col items-start gap-8">
+        <p className="max-w-md text-xl leading-[1.25] text-black">
+          You can begin by creating a new project.
+        </p>
+        <Link
+          href="/protected/projects/new"
+          className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-primary px-3 text-lg leading-none font-normal text-primary-foreground transition-colors hover:bg-primary/80 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          New project
+        </Link>
       </div>
-      <div className="flex flex-col gap-2 items-start">
-        <h2 className="font-bold text-2xl mb-4">Your user details</h2>
-        <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
-          <Suspense>
-            <UserDetails />
-          </Suspense>
-        </pre>
-      </div>
-      <div>
-        <Button>
-          <Link href="/protected/projects/new">New Project </Link>
-        </Button>
-      </div>
-    </div>
+    </section>
   );
 }

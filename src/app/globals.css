@@ -188,6 +188,10 @@
   html {
     @apply font-sans;
   }
+
+  button:not(:disabled):not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
 }
 
 /* convert this to tailwind css classes*/
