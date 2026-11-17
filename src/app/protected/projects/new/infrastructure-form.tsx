@@ -551,9 +551,11 @@ function DateField({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [menu, setMenu] = useState<"month" | "year" | null>(null);
   const [viewDate, setViewDate] = useState(() => startOfMonth(parseDate(value) ?? new Date()));
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const selectedDate = parseDate(value);
   const todayValue = toISODate(new Date());
@@ -570,7 +572,7 @@ function DateField({
     };
   });
   const currentYear = new Date().getFullYear();
-  const firstYear = Math.min(currentYear - 5, year);
+  const firstYear = Math.min(currentYear, year);
   const lastYear = Math.max(currentYear + 20, year);
   const years = Array.from({ length: lastYear - firstYear + 1 }, (_, index) => firstYear + index);
 
@@ -578,11 +580,18 @@ function DateField({
     if (!open) return;
 
     function handlePointerDown(event: PointerEvent) {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+        setMenu(null);
+      }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
+      if (menu) {
+        setMenu(null);
+        return;
+      }
       setOpen(false);
       buttonRef.current?.focus();
     }
@@ -593,22 +602,41 @@ function DateField({
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [open, menu]);
+
+  useEffect(() => {
+    if (!menu) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) setMenu(null);
+    }
+
+    menuRef.current
+      ?.querySelector<HTMLElement>('[aria-selected="true"]')
+      ?.scrollIntoView({ block: "nearest" });
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [menu]);
 
   function toggleCalendar() {
+    setMenu(null);
     if (!open) setViewDate(startOfMonth(selectedDate ?? new Date()));
     setOpen((current) => !current);
   }
 
   function changeMonth(offset: number) {
+    setMenu(null);
     setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
   }
 
   function showCurrentMonth() {
+    setMenu(null);
     setViewDate(startOfMonth(new Date()));
   }
 
   function selectDate(date: Date) {
+    setMenu(null);
     onChange(toISODate(date));
     setViewDate(startOfMonth(date));
     setOpen(false);
@@ -671,33 +699,117 @@ function DateField({
               className="absolute top-[calc(100%+0.5rem)] left-0 z-30 w-72 origin-top-left animate-in rounded-lg border border-grey-mid bg-gallifrey p-3.5 shadow-[0_18px_45px_rgb(28_53_87_/_14%)] duration-150 fade-in-0 zoom-in-95"
             >
               <div className="mb-2 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1">
-                  <select
-                    aria-label="Month"
-                    value={month}
-                    className="cursor-pointer rounded-md bg-transparent py-1 text-sm font-bold text-body outline-none transition-colors duration-150 hover:text-grass focus-visible:bg-cucumber"
-                    onChange={(event) => setViewDate(new Date(year, Number(event.target.value), 1))}
-                  >
-                    {MONTHS.map((monthName, index) => (
-                      <option key={monthName} value={index}>
-                        {monthName}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label="Year"
-                    value={year}
-                    className="cursor-pointer rounded-md bg-transparent py-1 text-sm font-bold text-body outline-none transition-colors duration-150 hover:text-grass focus-visible:bg-cucumber"
-                    onChange={(event) =>
-                      setViewDate(new Date(Number(event.target.value), month, 1))
-                    }
-                  >
-                    {years.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <div ref={menuRef} className="flex items-center gap-1">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className={cn(
+                        "flex cursor-pointer items-center gap-0.5 rounded-md px-1 py-1 text-sm font-bold text-body transition-colors duration-150 hover:bg-cucumber hover:text-grass focus-visible:bg-cucumber",
+                        menu === "month" && "bg-cucumber text-grass",
+                      )}
+                      aria-haspopup="listbox"
+                      aria-expanded={menu === "month"}
+                      aria-controls={`${name}-month-list`}
+                      onClick={() => setMenu(menu === "month" ? null : "month")}
+                    >
+                      {MONTHS[month]}
+                      <svg
+                        className="size-3 text-grey-ink"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </button>
+                    {menu === "month" && (
+                      <div
+                        id={`${name}-month-list`}
+                        role="listbox"
+                        aria-label="Select month"
+                        className="absolute top-[calc(100%+0.25rem)] left-0 z-40 max-h-44 w-20 overflow-y-auto rounded-md border border-grey-mid bg-gallifrey p-1 shadow-[0_10px_28px_rgb(28_53_87_/_16%)]"
+                      >
+                        {MONTHS.map((monthName, index) => (
+                          <button
+                            key={monthName}
+                            type="button"
+                            role="option"
+                            aria-selected={index === month}
+                            className={cn(
+                              "flex h-8 w-full cursor-pointer items-center rounded px-2 text-left text-xs text-body transition-colors duration-150 hover:bg-cucumber",
+                              index === month &&
+                                "bg-grass font-semibold text-gallifrey hover:bg-grass-mid",
+                            )}
+                            onClick={() => {
+                              setViewDate(new Date(year, index, 1));
+                              setMenu(null);
+                            }}
+                          >
+                            {monthName}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className={cn(
+                        "flex cursor-pointer items-center gap-0.5 rounded-md px-1 py-1 text-sm font-bold text-body transition-colors duration-150 hover:bg-cucumber hover:text-grass focus-visible:bg-cucumber",
+                        menu === "year" && "bg-cucumber text-grass",
+                      )}
+                      aria-haspopup="listbox"
+                      aria-expanded={menu === "year"}
+                      aria-controls={`${name}-year-list`}
+                      onClick={() => setMenu(menu === "year" ? null : "year")}
+                    >
+                      {year}
+                      <svg
+                        className="size-3 text-grey-ink"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </button>
+                    {menu === "year" && (
+                      <div
+                        id={`${name}-year-list`}
+                        role="listbox"
+                        aria-label="Select year"
+                        className="absolute top-[calc(100%+0.25rem)] left-0 z-40 max-h-44 w-20 overflow-y-auto rounded-md border border-grey-mid bg-gallifrey p-1 shadow-[0_10px_28px_rgb(28_53_87_/_16%)]"
+                      >
+                        {years.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            role="option"
+                            aria-selected={option === year}
+                            className={cn(
+                              "flex h-8 w-full cursor-pointer items-center rounded px-2 text-left text-xs text-body transition-colors duration-150 hover:bg-cucumber",
+                              option === year &&
+                                "bg-grass font-semibold text-gallifrey hover:bg-grass-mid",
+                            )}
+                            onClick={() => {
+                              setViewDate(new Date(option, month, 1));
+                              setMenu(null);
+                            }}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-0.5">
                   <button
@@ -761,22 +873,25 @@ function DateField({
                 {days.map((day) => {
                   const isSelected = day.value === value;
                   const isToday = day.value === todayValue;
+                  const isUnavailable = day.value <= todayValue;
                   return (
                     <button
                       key={day.value}
                       type="button"
                       className={cn(
                         "grid size-8 place-items-center rounded-md text-xs transition-colors duration-150 outline-none",
-                        day.outside ? "text-grey-ink/50" : "text-body",
-                        isSelected
-                          ? "bg-grass font-semibold text-gallifrey hover:bg-grass-mid"
-                          : isToday
-                            ? "border border-grass font-semibold text-grass hover:bg-cucumber"
-                            : "hover:bg-cucumber focus-visible:bg-cucumber",
+                        isUnavailable
+                          ? "cursor-not-allowed text-grey-ink/35"
+                          : day.outside
+                            ? "text-grey-ink/50 hover:bg-cucumber focus-visible:bg-cucumber"
+                            : isSelected
+                              ? "bg-grass font-semibold text-gallifrey hover:bg-grass-mid"
+                              : "hover:bg-cucumber focus-visible:bg-cucumber",
                       )}
                       aria-label={longDateFormatter.format(day.date)}
                       aria-pressed={isSelected}
                       aria-current={isToday ? "date" : undefined}
+                      disabled={isUnavailable}
                       onClick={() => selectDate(day.date)}
                     >
                       {day.date.getDate()}
@@ -788,18 +903,21 @@ function DateField({
           )}
         </div>
 
-        <p aria-live="polite" className="min-h-5 text-sm text-body">
-          {value ? formatDisplayDate(value) : ""}
-        </p>
-
-        {value && !disabled && (
-          <button
-            type="button"
-            className="cursor-pointer border-b border-grey-mid text-[11px] font-semibold text-grey-ink transition-colors duration-180 hover:border-body hover:text-body"
-            onClick={() => onChange("")}
-          >
-            Clear
-          </button>
+        {value && (
+          <div className="flex items-center gap-3">
+            <span aria-live="polite" className="text-sm font-medium text-body">
+              {formatDisplayDate(value)}
+            </span>
+            {!disabled && (
+              <button
+                type="button"
+                className="cursor-pointer text-[11px] font-semibold text-grey-ink underline decoration-grey-mid underline-offset-2 transition-colors duration-180 hover:text-body hover:decoration-body"
+                onClick={() => onChange("")}
+              >
+                Clear
+              </button>
+            )}
+          </div>
         )}
       </div>
       {error && (
