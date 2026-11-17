@@ -9,6 +9,8 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           <div className="w-full max-w-6xl flex justify-between items-center p-3 px-5 text-sm">
             <div className="flex gap-5 items-center font-semibold">
               <Link href={"/"}>Home</Link>
+              {/* show this only if you are an admin */}
+              <Link href={"/protected/admin"}>Admin</Link>
             </div>
             <ProfileNavigation />
           </div>

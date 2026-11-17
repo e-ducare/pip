@@ -18,19 +18,7 @@ const adminSections = [
   },
 ];
 
-export default async function AdminPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-
-  if (!id || !/^[\w-]+$/.test(id)) {
-    notFound();
-  }
-
-  const adminPath = `/protected/projects/${encodeURIComponent(id)}/admin`;
-
+export default async function AdminPage({}: {}) {
   return (
     <main className="relative left-1/2 flex min-h-screen w-screen -translate-x-1/2 flex-col bg-grey-light px-5 py-5 text-body sm:px-8 sm:py-8">
       <section className="flex min-h-[min(72vh,680px)] flex-1 flex-col rounded-xl border border-grey-mid px-6 py-7 sm:px-10 sm:py-9">
@@ -53,22 +41,17 @@ export default async function AdminPage({
             <p className="mb-3 text-xs font-semibold tracking-[0.2em] text-grass uppercase">
               Administration
             </p>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Admin Page
-            </h1>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Admin Page</h1>
             <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-body sm:text-base">
               Choose an area to continue managing this project.
             </p>
           </div>
 
-          <nav
-            aria-label="Admin sections"
-            className="grid gap-4 sm:grid-cols-2 sm:gap-6"
-          >
+          <nav aria-label="Admin sections" className="grid gap-4 sm:grid-cols-2 sm:gap-6">
             {adminSections.map(({ title, description, href, Icon }, index) => (
               <Link
                 key={href}
-                href={`${adminPath}/${href}`}
+                href={`/protected/admin/${href}`}
                 className="group flex min-h-52 flex-col rounded-xl border border-grey-mid bg-gallifrey p-6 text-body shadow-sm transition duration-200 hover:-translate-y-1 hover:border-grass hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-grass"
               >
                 <div className="flex items-start justify-between">
@@ -82,9 +65,7 @@ export default async function AdminPage({
                 <div className="mt-auto flex items-end justify-between gap-4 pt-8">
                   <div>
                     <h2 className="text-lg font-semibold">{title}</h2>
-                    <p className="mt-1 text-sm leading-5 text-body">
-                      {description}
-                    </p>
+                    <p className="mt-1 text-sm leading-5 text-body">{description}</p>
                   </div>
                   <ArrowUpRight
                     aria-hidden="true"
@@ -96,9 +77,7 @@ export default async function AdminPage({
           </nav>
         </div>
 
-        <p className="text-center text-xs text-grey-ink">
-          E-ducare · Project admin
-        </p>
+        <p className="text-center text-xs text-grey-ink">E-ducare · Project admin</p>
       </section>
     </main>
   );
