@@ -1,14 +1,14 @@
 "use client";
 
 import { cn } from "cn";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const kicker = "mb-1.75 text-[10px] font-bold tracking-[0.16em] text-[#c9f17a] uppercase";
-const muted = "text-[#96958f]";
+const kicker = "mb-1.75 text-[10px] font-bold tracking-[0.16em] text-grass uppercase";
+const muted = "text-grey-ink";
 const fieldControl =
-  "w-full text-sm leading-normal text-[#f4f1ea] outline-none transition-colors duration-180 placeholder:text-[#777771]";
-const cellControl = `${fieldControl} min-h-13.75 px-3.5 py-2.75 focus:bg-[#181817]`;
-const cell = "border-r border-b border-[#373734] last:border-r-0";
+  "w-full text-sm leading-normal text-body outline-none transition-colors duration-180 placeholder:text-grey-ink";
+const cellControl = `${fieldControl} min-h-13.75 bg-gallifrey px-3.5 py-2.75 focus:bg-grey-light`;
+const cell = "border-r border-b border-grey-mid last:border-r-0";
 const formSection = "mt-10.5 max-sm:mt-8.5 w-full";
 const tableSection = "mt-16 max-sm:mt-8.5";
 
@@ -94,6 +94,8 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
   const [people, setPeople] = useState(() => threeOf(newPerson));
   const [costs, setCosts] = useState(() => threeOf(newCost));
   const [reviews, setReviews] = useState<Record<string, Review>>({});
+  const [fundsNeededBy, setFundsNeededBy] = useState("");
+  const [dateError, setDateError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -120,6 +122,14 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
     setError("");
     const form = event.currentTarget;
     if (!form.reportValidity()) return;
+    if (role === "applicant" && !fundsNeededBy) {
+      const message = "Select the date by which the funds are needed.";
+      setDateError(message);
+      setError(message);
+      document.getElementById("fundsNeededBy")?.focus();
+      return;
+    }
+    setDateError("");
     if (role === "reviewer" && textFields.some((field) => !reviews[field.name])) {
       setError("Approve or reject every field before submitting.");
       return;
@@ -155,6 +165,8 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
     setPeople(threeOf(newPerson));
     setCosts(threeOf(newCost));
     setReviews({});
+    setFundsNeededBy("");
+    setDateError("");
     setSubmitted(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -163,7 +175,7 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
     return (
       <section className="max-w-150 animate-in pt-25 pb-35 duration-500 fade-in slide-in-from-bottom-[18px] max-sm:pt-18">
         <div
-          className="mb-9 grid size-16 place-items-center rounded-full border border-[#c9f17a] text-[30px] text-[#c9f17a]"
+          className="mb-9 grid size-16 place-items-center rounded-full border border-grass text-[30px] text-grass"
           aria-hidden="true"
         >
           ✓
@@ -177,7 +189,7 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
           ready for review.
         </p>
         <button
-          className="mt-9.5 cursor-pointer border-b border-[#c9f17a] pb-1 text-xs leading-[normal] font-semibold text-[#c9f17a]"
+          className="mt-9.5 cursor-pointer border-b border-grass pb-1 text-xs leading-[normal] font-semibold text-grass"
           type="button"
           onClick={startNewRequest}
         >
@@ -232,7 +244,7 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
                   required
                   className={cn(
                     fieldControl,
-                    "block min-h-22 w-1/2 resize-y rounded-lg border border-[#ff9d8d]/50 bg-[#121211]/74 px-4.5 py-4.25 focus:border-[#ff9d8d] focus:bg-[#151513]",
+                    "block min-h-22 w-1/2 resize-y rounded-lg border border-red-300 bg-gallifrey px-4.5 py-4.25 focus:border-red-400 focus:bg-grey-light",
                   )}
                 />
               )}
@@ -326,6 +338,11 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
           title="Summary of projected costs"
           note="Show how the requested funds would be used."
         />
+        <p className={`mb-4 text-xs leading-[1.6] ${muted}`}>
+          NRC - Non recurring costs is a fixed one-time payment that does not repeat
+          <br />
+          RC - recurring costs that repeat every set interval (eg: yearly)
+        </p>
         <Table
           headers={[
             ["Description of items required", "w-[29%]"],
@@ -392,6 +409,22 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
         </AddButton>
       </section>
 
+      <DateField
+        name="fundsNeededBy"
+        label="Funds needed by"
+        value={fundsNeededBy}
+        onChange={(value) => {
+          setFundsNeededBy(value);
+          if (value) {
+            setDateError("");
+            setError("");
+          }
+        }}
+        error={dateError}
+        required={role === "applicant"}
+        disabled={role === "reviewer"}
+      />
+
       <TextField
         name="additionalInfo"
         label="Additional information"
@@ -400,12 +433,12 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
         disabled={role === "reviewer"}
       />
 
-      <div className="mt-16.75 flex items-center justify-between gap-5 border-t border-[#373734] pt-6.25 max-sm:flex-col-reverse max-sm:items-stretch">
+      <div className="mt-16.75 flex items-center justify-between gap-5 border-t border-grey-mid pt-6.25 max-sm:flex-col-reverse max-sm:items-stretch">
         <p className={`text-[11px] max-sm:text-right ${muted}`}>
-          <span className="text-[20px] text-[#c9f17a]">*</span> Required fields
+          <span className="text-[20px] text-grass">*</span> Required fields
         </p>
         <button
-          className="flex min-w-47.5 cursor-pointer items-center justify-between gap-11.25 rounded-[3px] border border-[#c9f17a] bg-[#c9f17a] py-3.75 pr-4.25 pl-5 text-[13px] leading-[normal] font-bold text-[#080808] transition-[translate,background-color] duration-180 enabled:hover:-translate-y-0.5 enabled:hover:bg-[#e0ffab] disabled:cursor-wait disabled:opacity-65 max-sm:w-full"
+          className="flex min-w-47.5 cursor-pointer items-center justify-between gap-11.25 rounded-[3px] border border-grass bg-grass py-3.75 pr-4.25 pl-5 text-[13px] leading-[normal] font-bold text-gallifrey transition-[translate,background-color] duration-180 enabled:hover:-translate-y-0.5 enabled:hover:bg-grass-mid disabled:cursor-wait disabled:opacity-65 max-sm:w-full"
           type="submit"
           disabled={submitting}
         >
@@ -413,7 +446,7 @@ export function InfrastructureForm({ role, isReviewing }: { role?: Role; isRevie
           <span aria-hidden="true">→</span>
         </button>
       </div>
-      <p className="mt-4.25 min-h-5 text-right text-xs text-[#ff9d8d]" role="alert">
+      <p className="mt-4.25 min-h-5 text-right text-xs text-red-600" role="alert">
         {error}
       </p>
     </form>
@@ -444,7 +477,7 @@ function TextField({
         {required && (
           <>
             {" "}
-            <span className="text-[#c9f17a]" aria-hidden="true">
+            <span className="text-grass" aria-hidden="true">
               *
             </span>
           </>
@@ -457,8 +490,442 @@ function TextField({
         rows={rows}
         placeholder={placeholder}
         required={required}
-        className={`${fieldControl} block min-h-22 resize-y rounded-lg border border-[#373734] bg-[#121211]/74 px-4.5 py-4.25 focus:border-[#c9f17a] focus:bg-[#151513]`}
+        className={`${fieldControl} block min-h-22 resize-y rounded-lg border border-grey-mid bg-gallifrey px-4.5 py-4.25 focus:border-grass focus:bg-grey-light`}
       />
+    </section>
+  );
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+const longDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+
+function parseDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+function toISODate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function formatDisplayDate(value: string) {
+  const date = parseDate(value);
+  return date ? shortDateFormatter.format(date) : "";
+}
+
+function DateField({
+  name,
+  label,
+  value,
+  onChange,
+  error = "",
+  required = false,
+  disabled = false,
+}: {
+  name: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  required?: boolean;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [menu, setMenu] = useState<"month" | "year" | null>(null);
+  const [viewDate, setViewDate] = useState(() => startOfMonth(parseDate(value) ?? new Date()));
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const selectedDate = parseDate(value);
+  const todayValue = toISODate(new Date());
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const leadingDays = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days = Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(year, month, index - leadingDays + 1);
+    return {
+      date,
+      value: toISODate(date),
+      outside: index < leadingDays || index >= leadingDays + daysInMonth,
+    };
+  });
+  const currentYear = new Date().getFullYear();
+  const firstYear = Math.min(currentYear, year);
+  const lastYear = Math.max(currentYear + 20, year);
+  const years = Array.from({ length: lastYear - firstYear + 1 }, (_, index) => firstYear + index);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+        setMenu(null);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      if (menu) {
+        setMenu(null);
+        return;
+      }
+      setOpen(false);
+      buttonRef.current?.focus();
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, menu]);
+
+  useEffect(() => {
+    if (!menu) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) setMenu(null);
+    }
+
+    menuRef.current
+      ?.querySelector<HTMLElement>('[aria-selected="true"]')
+      ?.scrollIntoView({ block: "nearest" });
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [menu]);
+
+  function toggleCalendar() {
+    setMenu(null);
+    if (!open) setViewDate(startOfMonth(selectedDate ?? new Date()));
+    setOpen((current) => !current);
+  }
+
+  function changeMonth(offset: number) {
+    setMenu(null);
+    setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
+  }
+
+  function showCurrentMonth() {
+    setMenu(null);
+    setViewDate(startOfMonth(new Date()));
+  }
+
+  function selectDate(date: Date) {
+    setMenu(null);
+    onChange(toISODate(date));
+    setViewDate(startOfMonth(date));
+    setOpen(false);
+    buttonRef.current?.focus();
+  }
+
+  return (
+    <section className={formSection}>
+      <p id={`${name}-label`} className="mb-3.25 block text-lg font-semibold tracking-tight">
+        {label}
+        {required && (
+          <>
+            {" "}
+            <span className="text-grass" aria-hidden="true">
+              *
+            </span>
+          </>
+        )}
+      </p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div ref={containerRef} className="relative">
+          <button
+            ref={buttonRef}
+            id={name}
+            type="button"
+            className={cn(
+              "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-grey-mid bg-gallifrey px-4 text-[13px] leading-[normal] font-semibold text-body transition-colors duration-180 hover:border-grass hover:bg-cucumber focus-visible:border-grass focus-visible:ring-3 focus-visible:ring-grass/20 focus-visible:outline-none aria-expanded:border-grass aria-expanded:bg-cucumber disabled:cursor-not-allowed disabled:opacity-50",
+              error && "border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20",
+            )}
+            aria-describedby={error ? `${name}-label ${name}-error` : `${name}-label`}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            aria-controls={open ? `${name}-calendar` : undefined}
+            aria-invalid={Boolean(error)}
+            aria-required={required}
+            disabled={disabled}
+            onClick={toggleCalendar}
+          >
+            <svg
+              className="size-4 text-grass"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M16 3v4M8 3v4M3 10h18" />
+            </svg>
+            <span>Select Date</span>
+          </button>
+
+          {open && (
+            <div
+              id={`${name}-calendar`}
+              role="dialog"
+              aria-label={`Choose a date for ${label}`}
+              className="absolute top-[calc(100%+0.5rem)] left-0 z-30 w-72 origin-top-left animate-in rounded-lg border border-grey-mid bg-gallifrey p-3.5 shadow-[0_18px_45px_rgb(28_53_87_/_14%)] duration-150 fade-in-0 zoom-in-95"
+            >
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div ref={menuRef} className="flex items-center gap-1">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className={cn(
+                        "flex cursor-pointer items-center gap-0.5 rounded-md px-1 py-1 text-sm font-bold text-body transition-colors duration-150 hover:bg-cucumber hover:text-grass focus-visible:bg-cucumber",
+                        menu === "month" && "bg-cucumber text-grass",
+                      )}
+                      aria-haspopup="listbox"
+                      aria-expanded={menu === "month"}
+                      aria-controls={`${name}-month-list`}
+                      onClick={() => setMenu(menu === "month" ? null : "month")}
+                    >
+                      {MONTHS[month]}
+                      <svg
+                        className="size-3 text-grey-ink"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </button>
+                    {menu === "month" && (
+                      <div
+                        id={`${name}-month-list`}
+                        role="listbox"
+                        aria-label="Select month"
+                        className="absolute top-[calc(100%+0.25rem)] left-0 z-40 max-h-44 w-20 overflow-y-auto rounded-md border border-grey-mid bg-gallifrey p-1 shadow-[0_10px_28px_rgb(28_53_87_/_16%)]"
+                      >
+                        {MONTHS.map((monthName, index) => (
+                          <button
+                            key={monthName}
+                            type="button"
+                            role="option"
+                            aria-selected={index === month}
+                            className={cn(
+                              "flex h-8 w-full cursor-pointer items-center rounded px-2 text-left text-xs text-body transition-colors duration-150 hover:bg-cucumber",
+                              index === month &&
+                                "bg-grass font-semibold text-gallifrey hover:bg-grass-mid",
+                            )}
+                            onClick={() => {
+                              setViewDate(new Date(year, index, 1));
+                              setMenu(null);
+                            }}
+                          >
+                            {monthName}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className={cn(
+                        "flex cursor-pointer items-center gap-0.5 rounded-md px-1 py-1 text-sm font-bold text-body transition-colors duration-150 hover:bg-cucumber hover:text-grass focus-visible:bg-cucumber",
+                        menu === "year" && "bg-cucumber text-grass",
+                      )}
+                      aria-haspopup="listbox"
+                      aria-expanded={menu === "year"}
+                      aria-controls={`${name}-year-list`}
+                      onClick={() => setMenu(menu === "year" ? null : "year")}
+                    >
+                      {year}
+                      <svg
+                        className="size-3 text-grey-ink"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </button>
+                    {menu === "year" && (
+                      <div
+                        id={`${name}-year-list`}
+                        role="listbox"
+                        aria-label="Select year"
+                        className="absolute top-[calc(100%+0.25rem)] left-0 z-40 max-h-44 w-20 overflow-y-auto rounded-md border border-grey-mid bg-gallifrey p-1 shadow-[0_10px_28px_rgb(28_53_87_/_16%)]"
+                      >
+                        {years.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            role="option"
+                            aria-selected={option === year}
+                            className={cn(
+                              "flex h-8 w-full cursor-pointer items-center rounded px-2 text-left text-xs text-body transition-colors duration-150 hover:bg-cucumber",
+                              option === year &&
+                                "bg-grass font-semibold text-gallifrey hover:bg-grass-mid",
+                            )}
+                            onClick={() => {
+                              setViewDate(new Date(option, month, 1));
+                              setMenu(null);
+                            }}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    className="cursor-pointer rounded-md px-1.5 py-1 text-[11px] font-semibold text-grey-ink transition-colors duration-150 hover:bg-cucumber hover:text-body focus-visible:bg-cucumber"
+                    aria-label="Go to the current month"
+                    onClick={showCurrentMonth}
+                  >
+                    Now
+                  </button>
+                  <button
+                    type="button"
+                    className="grid size-7 cursor-pointer place-items-center rounded-md text-grey-ink transition-colors duration-150 hover:bg-cucumber hover:text-body focus-visible:bg-cucumber"
+                    aria-label="Previous month"
+                    onClick={() => changeMonth(-1)}
+                  >
+                    <svg
+                      className="size-3.5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="grid size-7 cursor-pointer place-items-center rounded-md text-grey-ink transition-colors duration-150 hover:bg-cucumber hover:text-body focus-visible:bg-cucumber"
+                    aria-label="Next month"
+                    onClick={() => changeMonth(1)}
+                  >
+                    <svg
+                      className="size-3.5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {WEEKDAYS.map((weekday) => (
+                  <span
+                    key={weekday}
+                    className="grid h-7 place-items-center text-[10px] font-semibold tracking-[0.08em] text-grey-ink"
+                  >
+                    {weekday}
+                  </span>
+                ))}
+                {days.map((day) => {
+                  const isSelected = day.value === value;
+                  const isToday = day.value === todayValue;
+                  const isUnavailable = day.value <= todayValue;
+                  return (
+                    <button
+                      key={day.value}
+                      type="button"
+                      className={cn(
+                        "grid size-8 place-items-center rounded-md text-xs transition-colors duration-150 outline-none",
+                        isUnavailable
+                          ? "cursor-not-allowed text-grey-ink/35"
+                          : day.outside
+                            ? "text-grey-ink/50 hover:bg-cucumber focus-visible:bg-cucumber"
+                            : isSelected
+                              ? "bg-grass font-semibold text-gallifrey hover:bg-grass-mid"
+                              : "hover:bg-cucumber focus-visible:bg-cucumber",
+                      )}
+                      aria-label={longDateFormatter.format(day.date)}
+                      aria-pressed={isSelected}
+                      aria-current={isToday ? "date" : undefined}
+                      disabled={isUnavailable}
+                      onClick={() => selectDate(day.date)}
+                    >
+                      {day.date.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {value && (
+          <div className="flex items-center gap-3">
+            <span aria-live="polite" className="text-sm font-medium text-body">
+              {formatDisplayDate(value)}
+            </span>
+            {!disabled && (
+              <button
+                type="button"
+                className="cursor-pointer text-[11px] font-semibold text-grey-ink underline decoration-grey-mid underline-offset-2 transition-colors duration-180 hover:text-body hover:decoration-body"
+                onClick={() => onChange("")}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+      {error && (
+        <p id={`${name}-error`} className="mt-2 text-xs text-red-600" role="alert">
+          {error}
+        </p>
+      )}
+      <input type="hidden" name={name} value={value} disabled={disabled} />
     </section>
   );
 }
@@ -467,10 +934,10 @@ function SectionHeading({ number, title, note }: { number: string; title: string
   return (
     <div className="mb-4.75 flex items-end justify-between gap-6 max-sm:block">
       <div className="flex items-baseline gap-3.25">
-        <span className="text-[11px] font-bold tracking-widest text-[#c9f17a]">{number}</span>
+        <span className="text-[11px] font-bold tracking-widest text-grass">{number}</span>
         <h2 className="text-[25px] leading-[1.08] font-bold tracking-[-0.045em]">{title}</h2>
         <p className={`text-[11px] ${muted}`}>
-          <span className="text-[20px] text-[#c9f17a]">*</span>
+          <span className="text-[20px] text-grass">*</span>
         </p>
       </div>
       <p
@@ -490,7 +957,7 @@ function Table({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-x-auto border-y border-[#373734]">
+    <div className="overflow-x-auto border-y border-grey-mid">
       <table className="w-full min-w-155 table-fixed border-collapse">
         <thead>
           <tr>
@@ -513,7 +980,7 @@ function Table({
 function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button
-      className={`grid min-h-13.75 w-full cursor-pointer place-items-center text-lg hover:text-[#ff9d8d] ${muted}`}
+      className={`grid min-h-13.75 w-full cursor-pointer place-items-center text-lg text-red-500 hover:text-red-700`}
       type="button"
       aria-label={label}
       onClick={onClick}
@@ -536,12 +1003,12 @@ function ReviewButton({
 }) {
   const color =
     tone === "approve"
-      ? "aria-pressed:border-[#c9f17a] aria-pressed:bg-[#c9f17a] aria-pressed:text-[#080808] hover:border-[#c9f17a]"
-      : "aria-pressed:border-[#ff9d8d] aria-pressed:bg-[#ff9d8d] aria-pressed:text-[#080808] hover:border-[#ff9d8d]";
+      ? "aria-pressed:border-grass aria-pressed:bg-grass aria-pressed:text-gallifrey hover:border-grass"
+      : "aria-pressed:border-red-400 aria-pressed:bg-red-400 aria-pressed:text-body hover:border-red-400";
   return (
     <button
       className={cn(
-        "min-w-24 cursor-pointer rounded-[3px] border border-[#373734] px-3 py-2 text-xs font-semibold text-[#f4f1ea] transition-colors duration-180",
+        "min-w-24 cursor-pointer rounded-[3px] border border-grey-mid bg-gallifrey px-3 py-2 text-xs font-semibold text-body transition-colors duration-180",
         color,
       )}
       type="button"
@@ -556,7 +1023,7 @@ function ReviewButton({
 function AddButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
     <button
-      className="mt-3.25 cursor-pointer text-xs leading-[normal] font-semibold text-[#c9f17a] hover:underline"
+      className="mt-3.25 cursor-pointer text-xs leading-[normal] font-semibold text-grass hover:underline"
       type="button"
       onClick={onClick}
     >

@@ -24,10 +24,10 @@ export default function NewPage() {
         <img
           src="/images/educare-logo.png"
           alt="E-ducare logo"
-          className="size-11 rounded-full bg-[#c9f17a]"
+          className="size-11 rounded-full bg-semi-courgette"
         />
         <div>
-          <p className="mb-1.75 text-[10px] font-bold tracking-[0.16em] text-[#c9f17a] uppercase">
+          <p className="mb-1.75 text-[10px] font-bold tracking-[0.16em] text-grass uppercase">
             E-ducare / {showInfrastructureForm ? "infrastructure form" : "project type"}
           </p>
           <h1 className="text-[clamp(24px,4vw,34px)] leading-[normal] font-bold tracking-[-0.04em]">
@@ -39,7 +39,7 @@ export default function NewPage() {
         <InfrastructureForm role="applicant" isReviewing={false} />
       ) : (
         <section className="max-w-155 pb-15" aria-labelledby="project-type-title">
-          <p className="mb-1.75 text-[10px] font-bold tracking-[0.16em] text-[#c9f17a] uppercase">
+          <p className="mb-1.75 text-[10px] font-bold tracking-[0.16em] text-grass uppercase">
             Start your request
           </p>
           <h2
@@ -48,7 +48,7 @@ export default function NewPage() {
           >
             What type of project are you funding?
           </h2>
-          <p className="mt-4.5 mb-9 max-w-110 text-base leading-[1.6] text-[#96958f]">
+          <p className="mt-4.5 mb-9 max-w-110 text-base leading-[1.6] text-grey-ink">
             Choose the option that best describes the support you need.
           </p>
 
@@ -56,7 +56,7 @@ export default function NewPage() {
             <fieldset className="grid gap-3.25">
               <legend className="sr-only">Project type</legend>
               <label
-                className="group flex cursor-pointer items-start gap-4 rounded-lg border border-[#373734] bg-[#121211]/74 p-5 text-lg tracking-[-0.025em] transition-colors duration-180 has-checked:border-[#c9f17a] has-checked:bg-[#151513]"
+                className="group flex cursor-pointer items-start gap-4 rounded-lg border border-grey-mid bg-gallifrey p-5 text-lg tracking-[-0.025em] transition-colors duration-180 has-checked:border-grass has-checked:bg-cucumber"
                 htmlFor="infrastructure"
               >
                 <input
@@ -65,18 +65,18 @@ export default function NewPage() {
                   name="projectType"
                   value="infrastructure"
                   onChange={(event) => setProjectType(event.target.value)}
-                  className="mt-0.75 size-4.5 shrink-0 cursor-pointer accent-[#c9f17a]"
+                  className="mt-0.75 size-4.5 shrink-0 cursor-pointer accent-grass"
                 />
                 <span className="grid gap-1.5">
                   <span className="text-xl leading-[1.2] font-semibold">Infrastructure</span>
-                  <span className="hidden text-[13px] leading-normal font-normal text-[#96958f] group-has-checked:block">
+                  <span className="hidden text-[13px] leading-normal font-normal text-grey-ink group-has-checked:block">
                     This project involves building or improving schools, colleges, and related
                     facilities.
                   </span>
                 </span>
               </label>
               <label
-                className="group flex cursor-pointer items-start gap-4 rounded-lg border border-[#373734] bg-[#121211]/74 p-5 text-lg tracking-[-0.025em] transition-colors duration-180 has-checked:border-[#c9f17a] has-checked:bg-[#151513]"
+                className="group flex cursor-pointer items-start gap-4 rounded-lg border border-grey-mid bg-gallifrey p-5 text-lg tracking-[-0.025em] transition-colors duration-180 has-checked:border-grass has-checked:bg-cucumber"
                 htmlFor="sponsorship"
               >
                 <input
@@ -85,18 +85,18 @@ export default function NewPage() {
                   name="projectType"
                   value="sponsorship"
                   onChange={(event) => setProjectType(event.target.value)}
-                  className="mt-0.75 size-4.5 shrink-0 cursor-pointer accent-[#c9f17a]"
+                  className="mt-0.75 size-4.5 shrink-0 cursor-pointer accent-grass"
                 />
                 <span className="grid gap-1.5">
                   <span className="text-xl leading-[1.2] font-semibold">Sponsorship</span>
-                  <span className="hidden text-[13px] leading-normal font-normal text-[#96958f] group-has-checked:block">
+                  <span className="hidden text-[13px] leading-normal font-normal text-grey-ink group-has-checked:block">
                     This project provides sponsorship to support a child's education and well-being.
                   </span>
                 </span>
               </label>
             </fieldset>
             <button
-              className="mt-6.25 flex w-full cursor-pointer items-center justify-between rounded-[3px] border border-[#c9f17a] bg-[#c9f17a] py-3.75 pr-4.25 pl-5 text-[13px] leading-[normal] font-bold text-[#080808] transition-[translate,background-color] duration-180 enabled:hover:-translate-y-0.5 enabled:hover:bg-[#e0ffab] disabled:cursor-not-allowed disabled:opacity-45"
+              className="mt-6.25 flex w-full cursor-pointer items-center justify-between rounded-[3px] border border-grass bg-grass py-3.75 pr-4.25 pl-5 text-[13px] leading-[normal] font-bold text-gallifrey transition-[translate,background-color] duration-180 enabled:hover:-translate-y-0.5 enabled:hover:bg-grass-mid disabled:cursor-not-allowed disabled:opacity-45"
               type="submit"
               disabled={!projectType}
             >
