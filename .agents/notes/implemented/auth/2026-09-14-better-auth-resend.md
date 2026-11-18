@@ -8,7 +8,7 @@ The application has no existing users to import. Application roles, permissions,
 
 ## Chosen approach
 
-- `src/lib/auth.ts` requires verified email before login and revokes all sessions on password reset. Password hashing uses Better Auth's default scrypt.
+- `src/lib/auth.ts` requires verified email before login. A password reset revokes all sessions. `onPasswordReset` then marks the email verified, because the reset link proves inbox ownership, and signs the user in with `createSession` and `setSessionCookie`. Better Auth 1.7.15 documents that the callback runs after revocation. It reads the endpoint context with `getCurrentAuthEndpointContext` from `@better-auth/core`, a direct dependency pinned to the `better-auth` version. Better Auth has no built-in option; [PR #6246](https://github.com/better-auth/better-auth/pull/6246) proposes `emailAndPassword.autoSignInOnResetPassword` with the same two calls. Password hashing uses Better Auth's default scrypt.
 - Verification links sign the user in and return to `/auth/login`, which forwards signed-in users to `/protected` and shows link errors otherwise. Sign-up and the resend button send verification links; a denied login does not, so every link carries the same callback.
 - `src/lib/auth-email.ts` reads the Resend settings at module load, because Better Auth swallows errors thrown by email callbacks. It schedules delivery with `after()`, which vinext passes to the Worker's `waitUntil`. This keeps provider latency out of account-existence responses and keeps delivery alive after the response. Logs exclude message bodies, recipients, and tokens.
 - `src/proxy.ts` validates the database session on every route except auth pages, the auth API, and static assets. It costs one query per request and renews the session cookie, which Server Components cannot set. Pages still validate the session before reading data.
@@ -23,6 +23,8 @@ The application has no existing users to import. Application roles, permissions,
 - Awaiting Resend in request handlers exposes delivery latency. Untracked background promises risk termination after the response. A durable mail queue adds infrastructure not required for this initial implementation.
 - Better Auth's `sendOnSignIn` sends a new verification link on every denied login. It builds that link from the login request's callback, and the resend button already covers the need.
 - A proxy that checks only for the cookie avoids that query but cannot renew the cookie, so active users lose their session seven days after login.
+- Calling `signIn.email` after the reset, on the client or in a custom route, needs the email address, which the reset form lacks. It also fails for unverified users, so invited users could not sign in.
+- An after hook on `/reset-password` works on Better Auth 1.7.4, where revocation runs after `onPasswordReset`, but the callback must hand the user ID to the hook through a map keyed by the request.
 - The demo's admin, organization, MFA, and billing plugins introduce requirements that are not settled.
 
 ## Verification

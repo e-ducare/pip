@@ -1,6 +1,10 @@
 # PIP
 
-Next.js App Router application that runs on Cloudflare Workers through [vinext](https://github.com/cloudflare/vinext). It has Better Auth email/password authentication, Supabase-hosted Postgres behind Cloudflare Hyperdrive, and Resend email delivery. Application roles, permissions, organizations, and teams are not configured.
+PIP is E-ducare's internal web app for its Project Implementation Process. That process takes a charity project through the applicant's request, board approval, the legal and finance check, fundraising, implementation and monitoring. E-ducare runs programmes in Tanzania and Vietnam. [AGENTS.md](AGENTS.md#glossary) defines the process terms and lists the phases.
+
+The app has email sign-in, the infrastructure Project Request form, and project file uploads to Google Drive. Roles, approvals, notifications, and the phases after the request are not built.
+
+It is a Next.js App Router application that runs on Cloudflare Workers through [vinext](https://github.com/cloudflare/vinext). It uses Better Auth email/password authentication, Supabase-hosted Postgres behind Cloudflare Hyperdrive, and Resend email delivery.
 
 ## Setup
 
@@ -75,7 +79,7 @@ pnpm dev
 
 `src/lib/auth.ts` configures Better Auth. `src/lib/auth-email.ts` sends plain-text verification and reset links through Resend using `after()`, which vinext passes to the Worker's `waitUntil`. Delivery runs after the response, so a success message confirms the request, not delivery. Monitor Workers Logs and Resend delivery logs for failures; users can request another link. There is no persistent email retry queue.
 
-Password resets revoke all sessions. `src/proxy.ts` validates the database session on every route except `/auth/*`, `/api/auth/*`, and static assets. It redirects requests without a session to login and renews the session cookie, which Server Components cannot set. Pages, route handlers, and server actions still validate the session before accessing data.
+A password reset revokes all sessions, then signs the user in with a new one and marks their email verified. `src/proxy.ts` validates the database session on every route except `/auth/*`, `/api/auth/*`, and static assets. It redirects requests without a session to login and renews the session cookie, which Server Components cannot set. Pages, route handlers, and server actions still validate the session before accessing data.
 
 Better Auth's default rate limiter keeps counters in memory, and each Workers isolate has its own, so limits apply per isolate. Before a public launch, configure shared rate-limit storage or a Cloudflare rate limiting rule. Better Auth reads the client IP from `cf-connecting-ip`, which Cloudflare sets.
 

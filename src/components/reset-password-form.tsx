@@ -17,7 +17,6 @@ export function ResetPasswordForm({
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,15 +37,12 @@ export function ResetPasswordForm({
         token,
       });
       if (error) throw error;
-      setPassword("");
-      setRepeatPassword("");
-      setIsSuccess(true);
-      window.history.replaceState(null, "", "/auth/reset-password");
+      // The reset response sets a session cookie. Replacing the entry drops the token URL.
+      window.location.replace("/protected");
     } catch {
       setError(
         "Unable to reset your password. The link may be invalid or expired. Try again or request a new link.",
       );
-    } finally {
       setIsLoading(false);
     }
   };
@@ -59,60 +55,49 @@ export function ResetPasswordForm({
           <CardDescription>Use between 8 and 128 characters.</CardDescription>
         </CardHeader>
         <CardContent>
-          {isSuccess ? (
+          <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
-              <p role="status" className="text-sm text-muted-foreground">
-                Your password has been reset.
-              </p>
-              <Link href="/auth/login" className="text-sm underline underline-offset-4">
-                Log in with your new password
+              <div className="grid gap-2">
+                <Label htmlFor="password">New password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  maxLength={128}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="repeat-password">Repeat password</Label>
+                <Input
+                  id="repeat-password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  maxLength={128}
+                  required
+                  value={repeatPassword}
+                  onChange={(e) => setRepeatPassword(e.target.value)}
+                />
+              </div>
+              {error && (
+                <p role="alert" className="text-sm text-red-500">
+                  {error}
+                </p>
+              )}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Resetting password..." : "Reset password"}
+              </Button>
+            </div>
+            <div className="mt-4 text-center text-sm">
+              <Link href="/auth/forgot-password" className="underline underline-offset-4">
+                Request a new reset link
               </Link>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <div className="flex flex-col gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="password">New password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={8}
-                    maxLength={128}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="repeat-password">Repeat password</Label>
-                  <Input
-                    id="repeat-password"
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={8}
-                    maxLength={128}
-                    required
-                    value={repeatPassword}
-                    onChange={(e) => setRepeatPassword(e.target.value)}
-                  />
-                </div>
-                {error && (
-                  <p role="alert" className="text-sm text-red-500">
-                    {error}
-                  </p>
-                )}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Resetting password..." : "Reset password"}
-                </Button>
-              </div>
-              <div className="mt-4 text-center text-sm">
-                <Link href="/auth/forgot-password" className="underline underline-offset-4">
-                  Request a new reset link
-                </Link>
-              </div>
-            </form>
-          )}
+          </form>
         </CardContent>
       </Card>
     </div>
