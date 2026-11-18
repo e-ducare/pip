@@ -8,9 +8,9 @@
 # testing
 /coverage
 
-# next.js
+# vinext route types
 /.next/
-/out/
+next-env.d.ts
 
 # production
 /build
@@ -28,20 +28,15 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
-# Wrangler Secrets 
-.dev.vars
-.dev.vars.*
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 supabase/.temp
-
-.vinext
-.wrangler
-dist
-# .env ignoring does not cover '.dev.vars ' since it's a (different) wrangler framework. 
+/dist/
+.vinext/
+.wrangler/
+.dev.vars*
